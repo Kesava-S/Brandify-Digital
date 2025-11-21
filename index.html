@@ -360,24 +360,17 @@
                         <div class="admin-panel">
                             <h4>👥 Assign Roles & Users</h4>
                             <div class="control-row">
-                                <input type="text" placeholder="New User Email">
-                                <select>
-                                    <option>Assign Role...</option>
-                                    <option>Manager</option>
-                                    <option>Employee</option>
-                                    <option>Client</option>
+                                <input type="text" id="admin-new-user-email" placeholder="New User Email">
+                                <select id="admin-new-user-role">
+                                    <option value="">Assign Role...</option>
+                                    <option value="manager">Manager</option>
+                                    <option value="employee">Employee</option>
+                                    <option value="client">Client</option>
                                 </select>
-                                <button class="btn-small">Add</button>
+                                <button id="admin-add-user-btn" class="btn-small">Add</button>
                             </div>
-                            <div class="control-list">
-                                <div class="control-item">
-                                    <span>John Doe (Employee)</span>
-                                    <button class="text-btn delete">Remove</button>
-                                </div>
-                                <div class="control-item">
-                                    <span>Sarah Manager (Manager)</span>
-                                    <button class="text-btn delete">Remove</button>
-                                </div>
+                            <div class="control-list" id="admin-user-list">
+                                <!-- Users injected via JS -->
                             </div>
                         </div>
 
