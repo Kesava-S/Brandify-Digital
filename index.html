@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BrandiFy Digital | Marketing Automation</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="logo" id="nav-logo">
+            <img src="logo.png" alt="BrandiFy Digital Logo" class="logo-img">
+            <span>BrandiFy Digital</span>
+        </div>
+        <div class="nav-links">
+            <button id="nav-home" class="nav-btn active">Home</button>
+            <button id="nav-login" class="nav-btn">Login</button>
+            <button id="nav-logout" class="nav-btn hidden">Logout</button>
+        </div>
+    </nav>
+
+    <main id="app">
+        <!-- LANDING PAGE VIEW -->
+        <section id="view-landing" class="view active">
+            <header class="hero">
+                <h1>Personalized marketing automation</h1>
+                <p class="subtitle">Tailored Marketing Automation solutions for all your business needs.</p>
+            </header>
+
+            <section class="inquiry-section">
+                <div class="card">
+                    <h2>Get Started</h2>
+                    <form id="inquiry-form">
+                        <div class="form-group">
+                            <input type="text" placeholder="Your Name" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="email" placeholder="Your Email" required>
+                        </div>
+                        <div class="form-group">
+                            <textarea placeholder="Tell us about your automation needs" rows="3" required></textarea>
+                        </div>
+
+                        <!-- AI Chatbot Call Booking Trigger -->
+                        <div class="form-group ai-booking-section">
+                            <label>Schedule a Call (AI Assistant)</label>
+                            <div id="ai-chat-widget" class="ai-chat-widget">
+                                <div id="ai-chat-messages" class="ai-chat-messages">
+                                    <div class="ai-msg">Hi! I can help you book a call. What time works best for you?
+                                    </div>
+                                </div>
+                                <div class="ai-chat-input-area">
+                                    <input type="text" id="ai-chat-input" placeholder="e.g., Tomorrow at 2 PM">
+                                    <button type="button" id="ai-chat-send">Send</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-primary">Send Inquiry</button>
+                    </form>
+                </div>
+            </section>
+
+            <section class="services-section">
+                <h2>Our Services</h2>
+                <div class="accordion" id="services-accordion">
+                    <!-- Services injected via JS -->
+                </div>
+            </section>
+        </section>
+
+        <!-- UNIFIED LOGIN VIEW -->
+        <section id="view-login" class="view hidden">
+            <div class="login-container">
+                <h3>Login to BrandiFy</h3>
+                <form id="unified-login-form" class="auth-form">
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" id="login-email" placeholder="name@brandify.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="login-password" placeholder="Enter your password" required>
+                    </div>
+                    <button type="submit" class="btn-primary">Login</button>
+                    <div class="login-help">
+                        <p>Demo Credentials:</p>
+                        <small>Owner: admin@brandify.com</small><br>
+                        <small>Manager: manager@brandify.com</small><br>
+                        <small>Employee: emp@brandify.com</small><br>
+                        <small>Client: client@brandify.com</small>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- 1. EMPLOYEE DASHBOARD -->
+        <section id="view-dashboard-employee" class="view hidden">
+            <header class="dashboard-header">
+                <div>
+                    <h2>Employee Workspace</h2>
+                    <p>Welcome back, <span class="user-name-display">Employee</span></p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn-secondary" id="emp-clock-in">Clock In</button>
+                    <button class="btn-secondary hidden" id="emp-clock-out">Clock Out</button>
+                </div>
+            </header>
+
+            <div class="dashboard-grid">
+                <!-- Task List -->
+                <div class="card">
+                    <h3>My Tasks</h3>
+                    <ul class="task-list" id="emp-task-list">
+                        <!-- Tasks injected via JS -->
+                    </ul>
+                </div>
+
+                <!-- Daily Report -->
+                <div class="card">
+                    <h3>Daily Report Submission</h3>
+                    <form id="emp-report-form">
+                        <textarea placeholder="What did you accomplish today?" rows="4"></textarea>
+                        <button type="submit" class="btn-primary">Submit Report</button>
+                    </form>
+                </div>
+
+                <!-- Team Chat -->
+                <div class="card chat-card">
+                    <h3>Team Chat</h3>
+                    <div class="chat-box" id="emp-chat-box">
+                        <!-- Chat messages -->
+                    </div>
+                    <div class="chat-input">
+                        <input type="text" placeholder="Message team...">
+                        <button>Send</button>
+                    </div>
+                </div>
+
+                <!-- Announcements -->
+                <div class="card">
+                    <h3>Announcements</h3>
+                    <ul class="notification-list">
+                        <li>📢 New health policy updated.</li>
+                        <li>🎉 Team lunch this Friday!</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. MANAGER DASHBOARD -->
+        <section id="view-dashboard-manager" class="view hidden">
+            <header class="dashboard-header">
+                <div>
+                    <h2>Manager Hub</h2>
+                    <p>Team Overview & Controls</p>
+                </div>
+            </header>
+
+            <div class="dashboard-grid">
+                <!-- Team Overview -->
+                <div class="card">
+                    <h3>Team Performance</h3>
+                    <div class="stat-row">
+                        <span>Tasks Completed:</span> <strong>85%</strong>
+                    </div>
+                    <div class="stat-row">
+                        <span>Pending Reports:</span> <strong class="text-alert">3</strong>
+                    </div>
+                    <button class="btn-small">View Analytics</button>
+                </div>
+
+                <!-- Attendance Management (New) -->
+                <div class="card">
+                    <h3>Attendance Monitor</h3>
+                    <ul class="attendance-list">
+                        <li class="status-item active">
+                            <span class="dot"></span>
+                            <span>John Doe (Clocked In)</span>
+                        </li>
+                        <li class="status-item">
+                            <span class="dot" style="background: #ef4444;"></span>
+                            <span>Jane Smith (Absent)</span>
+                        </li>
+                    </ul>
+                    <button class="btn-secondary full-width-btn" style="margin-top: 1rem; width: 100%;">Manage Leave
+                        Requests</button>
+                </div>
+
+                <!-- Task Assignment -->
+                <div class="card">
+                    <h3>Assign Task</h3>
+                    <form id="mgr-assign-task-form">
+                        <input type="text" placeholder="Task Title" required>
+                        <select required>
+                            <option value="">Select Employee</option>
+                            <option value="emp1">John Doe</option>
+                            <option value="emp2">Jane Smith</option>
+                        </select>
+                        <button type="submit" class="btn-primary">Assign Task</button>
+                    </form>
+                </div>
+
+                <!-- Role Assignment (New) -->
+                <div class="card">
+                    <h3>Update Employee Role</h3>
+                    <p class="text-small">Changes will be reflected to the Owner.</p>
+                    <form id="mgr-role-form">
+                        <select id="role-emp-select" required>
+                            <option value="">Select Employee</option>
+                            <option value="John Doe">John Doe</option>
+                            <option value="Jane Smith">Jane Smith</option>
+                        </select>
+                        <input type="text" id="role-input" placeholder="New Role (e.g. Senior Specialist)" required>
+                        <button type="submit" class="btn-primary">Assign Role</button>
+                    </form>
+                </div>
+
+                <!-- Report Monitoring -->
+                <div class="card full-width">
+                    <h3>Recent Employee Reports</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th>Date</th>
+                                <th>Summary</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>John Doe</td>
+                                <td>Today</td>
+                                <td>Completed API integration for Client X</td>
+                                <td><span class="tag done">Reviewed</span></td>
+                            </tr>
+                            <tr>
+                                <td>Jane Smith</td>
+                                <td>Today</td>
+                                <td>Working on UI designs</td>
+                                <td><span class="tag medium">Pending</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. CLIENT DASHBOARD -->
+        <section id="view-dashboard-client" class="view hidden">
+            <header class="dashboard-header">
+                <div>
+                    <h2>Client Portal</h2>
+                    <p>Project: <strong>Alpha Automation</strong></p>
+                </div>
+            </header>
+
+            <div class="dashboard-grid">
+                <!-- Project Status -->
+                <div class="card">
+                    <h3>Project Timeline</h3>
+                    <div class="status-timeline">
+                        <div class="status-item completed">
+                            <span class="dot"></span>
+                            <span class="text">Onboarding & Strategy</span>
+                        </div>
+                        <div class="status-item active">
+                            <span class="dot"></span>
+                            <span class="text">Implementation (Current)</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="dot"></span>
+                            <span class="text">Testing & QA</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="dot"></span>
+                            <span class="text">Final Launch</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Documents -->
+                <div class="card">
+                    <h3>Documents & Files</h3>
+                    <ul class="file-list">
+                        <li>📄 <a href="#">Project_Proposal_v2.pdf</a></li>
+                        <li>📊 <a href="#">Q3_Performance_Report.pdf</a></li>
+                        <li>🧾 <a href="#">Invoice_#1023.pdf</a></li>
+                    </ul>
+                </div>
+
+                <!-- Chat with Manager -->
+                <div class="card chat-card">
+                    <h3>Chat with Manager</h3>
+                    <div class="chat-box" id="client-chat-box">
+                        <div class="message received">
+                            <p>We've updated the landing page as requested.</p>
+                        </div>
+                    </div>
+                    <div class="chat-input">
+                        <input type="text" placeholder="Type a message...">
+                        <button>Send</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. OWNER/ADMIN DASHBOARD -->
+        <section id="view-dashboard-owner" class="view hidden">
+            <header class="dashboard-header">
+                <div>
+                    <h2>Executive Dashboard</h2>
+                    <p>Company Overview & Administration</p>
+                </div>
+            </header>
+
+            <div class="dashboard-grid">
+                <!-- Financials -->
+                <div class="card">
+                    <h3>Financial Overview</h3>
+                    <div class="stat-grid">
+                        <div class="stat-item">
+                            <span class="label">Revenue (MTD)</span>
+                            <span class="value">$45,200</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="label">Pending Invoices</span>
+                            <span class="value">$12,500</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project Overview -->
+                <div class="card">
+                    <h3>Active Projects</h3>
+                    <ul class="project-list">
+                        <li>
+                            <strong>Alpha Automation</strong>
+                            <span class="tag done">On Track</span>
+                        </li>
+                        <li>
+                            <strong>Beta CRM Setup</strong>
+                            <span class="tag medium">Delayed</span>
+                        </li>
+                        <li>
+                            <strong>Gamma Ads</strong>
+                            <span class="tag high">Critical</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- User & Role Management (New) -->
+                <div class="card full-width">
+                    <h3>User & Role Management</h3>
+                    <div class="admin-grid">
+                        <div class="admin-panel">
+                            <h4>👥 Assign Roles & Users</h4>
+                            <div class="control-row">
+                                <input type="text" placeholder="New User Email">
+                                <select>
+                                    <option>Assign Role...</option>
+                                    <option>Manager</option>
+                                    <option>Employee</option>
+                                    <option>Client</option>
+                                </select>
+                                <button class="btn-small">Add</button>
+                            </div>
+                            <div class="control-list">
+                                <div class="control-item">
+                                    <span>John Doe (Employee)</span>
+                                    <button class="text-btn delete">Remove</button>
+                                </div>
+                                <div class="control-item">
+                                    <span>Sarah Manager (Manager)</span>
+                                    <button class="text-btn delete">Remove</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="admin-panel">
+                            <h4>🔔 Recent System Updates</h4>
+                            <ul class="notification-list" id="owner-notifications">
+                                <li>System: Monthly backup completed.</li>
+                                <!-- Role updates will appear here -->
+                            </ul>
+                        </div>
+
+                        <div class="admin-panel">
+                            <h4>🏗️ Team Structure</h4>
+                            <p class="text-small">Manage reporting lines and department organization.</p>
+                            <div class="action-buttons">
+                                <button class="btn-secondary">View Org Chart</button>
+                                <button class="btn-secondary">Edit Hierarchy</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Website Inquiries (New) -->
+                <div class="card full-width">
+                    <h3>Recent Website Inquiries</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Message</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="owner-inquiries-list">
+                            <!-- Inquiries injected via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 BrandiFy Digital. Automating your success.</p>
+    </footer>
+
+    <script type="module" src="script.js"></script>
+</body>
+
+</html>

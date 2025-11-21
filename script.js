@@ -1,0 +1,534 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+    getFirestore, collection, getDocs, addDoc, query, where, onSnapshot, updateDoc, doc, orderBy, limit
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+// --- FIREBASE CONFIGURATION ---
+// TODO: Replace with your actual Firebase project configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyA0OaZk65LzGnZG3WPN1SmiI8XzB1xkmag",
+    authDomain: "brandify-digital.firebaseapp.com",
+    projectId: "brandify-digital",
+    storageBucket: "brandify-digital.firebasestorage.app",
+    messagingSenderId: "80977859472",
+    appId: "1:80977859472:web:88a05035249c96df605915",
+    measurementId: "G-8YES8L8T3E"
+};
+
+// Initialize Firebase
+let db;
+try {
+    const app = initializeApp(firebaseConfig);
+    db = getFirestore(app);
+    console.log("Firebase initialized");
+} catch (error) {
+    console.error("Firebase initialization failed. Make sure to update firebaseConfig.", error);
+    alert("Firebase not configured! Please update script.js with your Firebase keys.");
+}
+
+// --- DATA SEEDING (Run once to populate DB) ---
+const INITIAL_DATA = {
+    users: [
+        { email: 'admin@brandify.com', role: 'owner', name: 'Admin User' },
+        { email: 'manager@brandify.com', role: 'manager', name: 'Sarah Manager' },
+        { email: 'emp@brandify.com', role: 'employee', name: 'John Employee' },
+        { email: 'client@brandify.com', role: 'client', name: 'Alpha Corp' }
+    ],
+    tasks: [
+        { title: "Setup HubSpot Workflows for Alpha", priority: "High", status: "Pending", assignedTo: "John Employee", createdAt: Date.now() },
+        { title: "Review Ad Copy for Beta Corp", priority: "Medium", status: "Pending", assignedTo: "John Employee", createdAt: Date.now() }
+    ],
+    attendance: [
+        { name: "John Employee", status: "Clocked In" },
+        { name: "Jane Smith", status: "Absent" }
+    ]
+};
+
+async function seedDatabase() {
+    if (!db) return;
+    const usersRef = collection(db, "users");
+    const snapshot = await getDocs(usersRef);
+
+    if (snapshot.empty) {
+        console.log("Seeding database...");
+        for (const user of INITIAL_DATA.users) await addDoc(collection(db, "users"), user);
+        for (const task of INITIAL_DATA.tasks) await addDoc(collection(db, "tasks"), task);
+        for (const att of INITIAL_DATA.attendance) await addDoc(collection(db, "attendance"), att);
+        alert("Database seeded! You can now login.");
+    }
+}
+
+// --- APP LOGIC ---
+
+const servicesData = [
+    {
+        title: "Lead Generation & Nurturing",
+        details: [
+            "Capture leads automatically from your website, ads, and social media.",
+            "Engage prospects with email and SMS drip campaigns.",
+            "Follow-up with WhatsApp sequences for faster conversions."
+        ]
+    },
+    {
+        title: "Personalized CRM with Automation",
+        details: [
+            "Capture leads via forms, chatbots, and landing pages, then segment them for target marketing.",
+            "Automated reminders and deal updates for your sales team.",
+            "Ensure no lead slips through the cracks with intelligent workflows."
+        ]
+    },
+    {
+        title: "Social Media Automation",
+        details: [
+            "Schedule posts across all platforms to maintain a consistent presence.",
+            "Automate responses to messages and comments using chatbot flows.",
+            "Save time while staying engaged with your audience 24/7."
+        ]
+    },
+    {
+        title: "Ads Automation",
+        details: [
+            "Automatically optimize Meta & Google ads for maximum ROI.",
+            "Set up retargeting campaigns and dynamic audience updates.",
+            "Reduce ad spend wastage and boost campaign performance."
+        ]
+    },
+    {
+        title: "Reporting & Insights",
+        details: [
+            "Receive automated weekly and monthly performance dashboards.",
+            "Track lead sources and campaign effectiveness effortlessly.",
+            "Make data-driven decisions without manual reporting."
+        ]
+    },
+    {
+        title: "Sales Automation",
+        details: [
+            "Enable automatic call booking and calendar integrations.",
+            "Reactivate abandoned leads with automated sequences.",
+            "Turn more prospects into customers with minimal effort."
+        ]
+    }
+];
+
+document.addEventListener('DOMContentLoaded', async () => {
+    // Check/Seed DB
+    await seedDatabase();
+
+    // --- 1. Render Services ---
+    const accordionContainer = document.getElementById('services-accordion');
+    if (accordionContainer) {
+        servicesData.forEach((service) => {
+            const item = document.createElement('div');
+            item.className = 'accordion-item';
+            item.innerHTML = `
+                <div class="accordion-header">
+                    <span>${service.title}</span>
+                    <span class="accordion-icon">▼</span>
+                </div>
+                <div class="accordion-content">
+                    <ul>
+                        ${service.details.map(detail => `<li>${detail}</li>`).join('')}
+                    </ul>
+                </div>
+            `;
+
+            const header = item.querySelector('.accordion-header');
+            header.addEventListener('click', () => {
+                document.querySelectorAll('.accordion-item').forEach(i => {
+                    if (i !== item) i.classList.remove('active');
+                });
+                item.classList.toggle('active');
+            });
+
+            accordionContainer.appendChild(item);
+        });
+    }
+
+    // --- 2. Navigation & Views ---
+    const views = {
+        landing: document.getElementById('view-landing'),
+        login: document.getElementById('view-login'),
+        employee: document.getElementById('view-dashboard-employee'),
+        manager: document.getElementById('view-dashboard-manager'),
+        client: document.getElementById('view-dashboard-client'),
+        owner: document.getElementById('view-dashboard-owner')
+    };
+
+    const navBtns = {
+        home: document.getElementById('nav-home'),
+        login: document.getElementById('nav-login'),
+        logout: document.getElementById('nav-logout')
+    };
+
+    let currentUser = null;
+    let unsubscribeListeners = [];
+
+    function switchView(viewName) {
+        // 1. Hide all views
+        Object.values(views).forEach(el => {
+            if (el) {
+                el.classList.remove('active');
+                el.classList.add('hidden');
+            }
+        });
+
+        // 2. Show target view
+        const target = views[viewName];
+        if (target) {
+            target.classList.remove('hidden');
+            // Force reflow to enable transition
+            void target.offsetWidth;
+            target.classList.add('active');
+            console.log(`Switched to view: ${viewName}`);
+        } else {
+            console.error(`View '${viewName}' not found.`);
+        }
+    }
+
+    function goHome() {
+        if (currentUser) {
+            switchView(currentUser.role === 'employee' ? 'employee' : currentUser.role === 'manager' ? 'manager' : currentUser.role === 'client' ? 'client' : 'owner');
+        } else {
+            switchView('landing');
+        }
+    }
+
+    if (navBtns.home) navBtns.home.addEventListener('click', goHome);
+
+    // Logo Click
+    const navLogo = document.getElementById('nav-logo');
+    if (navLogo) navLogo.addEventListener('click', goHome);
+
+    if (navBtns.login) navBtns.login.addEventListener('click', () => switchView('login'));
+
+    if (navBtns.logout) navBtns.logout.addEventListener('click', () => {
+        currentUser = null;
+        // Unsubscribe from real-time listeners
+        unsubscribeListeners.forEach(unsub => unsub());
+        unsubscribeListeners = [];
+
+        navBtns.login.classList.remove('hidden');
+        navBtns.logout.classList.add('hidden');
+        switchView('landing');
+    });
+
+    // --- 3. Unified Login Logic (Firestore) ---
+    const loginForm = document.getElementById('unified-login-form');
+
+    if (loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+
+            if (!db) {
+                alert("Database not connected.");
+                return;
+            }
+
+            try {
+                // Query Users Collection
+                const q = query(collection(db, "users"), where("email", "==", email));
+                const querySnapshot = await getDocs(q);
+
+                if (!querySnapshot.empty) {
+                    const userDoc = querySnapshot.docs[0];
+                    currentUser = { id: userDoc.id, ...userDoc.data() };
+
+                    navBtns.login.classList.add('hidden');
+                    navBtns.logout.classList.remove('hidden');
+
+                    // Initialize Real-time Listeners
+                    if (currentUser.role === 'employee') initEmployeeDashboard();
+                    if (currentUser.role === 'manager') initManagerDashboard();
+                    if (currentUser.role === 'owner') initOwnerDashboard();
+
+                    // Force view switch based on role
+                    const roleViewMap = {
+                        'employee': 'employee',
+                        'manager': 'manager',
+                        'client': 'client',
+                        'owner': 'owner'
+                    };
+
+                    if (roleViewMap[currentUser.role]) {
+                        switchView(roleViewMap[currentUser.role]);
+                    } else {
+                        console.error("Unknown role:", currentUser.role);
+                    }
+                } else {
+                    alert('Invalid email. Please check your credentials.');
+                }
+            } catch (error) {
+                console.error("Login error:", error);
+                alert("Login failed. Check console for details.");
+            }
+        });
+    }
+
+    // --- 4. Employee Dashboard Logic ---
+    function initEmployeeDashboard() {
+        document.querySelector('.user-name-display').textContent = currentUser.name;
+
+        // Listen for Tasks
+        const q = query(collection(db, "tasks"), where("assignedTo", "==", currentUser.name));
+        const unsub = onSnapshot(q, (snapshot) => {
+            const taskList = document.getElementById('emp-task-list');
+            taskList.innerHTML = '';
+            if (snapshot.empty) {
+                taskList.innerHTML = '<li>No tasks assigned yet.</li>';
+            } else {
+                snapshot.forEach(doc => {
+                    const task = doc.data();
+                    const li = document.createElement('li');
+                    li.className = 'task-item';
+                    li.innerHTML = `
+                        <input type="checkbox" ${task.status === 'Done' ? 'checked' : ''}>
+                        <label>${task.title}</label>
+                        <span class="tag ${task.priority === 'High' ? 'high' : task.priority === 'Medium' ? 'medium' : 'done'}">${task.priority}</span>
+                    `;
+                    taskList.appendChild(li);
+                });
+            }
+        });
+        unsubscribeListeners.push(unsub);
+    }
+
+    // Employee Report Submission
+    const empReportForm = document.getElementById('emp-report-form');
+    if (empReportForm) {
+        empReportForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const text = empReportForm.querySelector('textarea').value;
+            if (text && db) {
+                await addDoc(collection(db, "reports"), {
+                    employee: currentUser.name,
+                    date: new Date().toLocaleDateString(),
+                    summary: text,
+                    status: "Pending",
+                    createdAt: Date.now()
+                });
+                alert("Report submitted successfully!");
+                empReportForm.reset();
+            }
+        });
+    }
+
+    // Clock In/Out Logic
+    const btnClockIn = document.getElementById('emp-clock-in');
+    const btnClockOut = document.getElementById('emp-clock-out');
+
+    // Helper to update attendance
+    async function updateAttendance(status) {
+        // Find existing attendance doc or create new
+        const q = query(collection(db, "attendance"), where("name", "==", currentUser.name));
+        const snapshot = await getDocs(q);
+
+        if (!snapshot.empty) {
+            await updateDoc(doc(db, "attendance", snapshot.docs[0].id), { status: status });
+        } else {
+            await addDoc(collection(db, "attendance"), { name: currentUser.name, status: status });
+        }
+    }
+
+    if (btnClockIn && btnClockOut) {
+        btnClockIn.addEventListener('click', async () => {
+            btnClockIn.classList.add('hidden');
+            btnClockOut.classList.remove('hidden');
+            await updateAttendance("Clocked In");
+            alert('You have clocked in.');
+        });
+
+        btnClockOut.addEventListener('click', async () => {
+            btnClockOut.classList.add('hidden');
+            btnClockIn.classList.remove('hidden');
+            await updateAttendance("Clocked Out");
+            alert('You have clocked out.');
+        });
+    }
+
+    // --- 5. Manager Dashboard Logic ---
+    function initManagerDashboard() {
+        // Listen for Reports
+        const qReports = query(collection(db, "reports"), orderBy("createdAt", "desc"), limit(10));
+        const unsubReports = onSnapshot(qReports, (snapshot) => {
+            const reportTableBody = document.querySelector('#view-dashboard-manager .data-table tbody');
+            if (reportTableBody) {
+                reportTableBody.innerHTML = '';
+                snapshot.forEach(doc => {
+                    const rep = doc.data();
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${rep.employee}</td>
+                        <td>${rep.date}</td>
+                        <td>${rep.summary}</td>
+                        <td><span class="tag ${rep.status === 'Reviewed' ? 'done' : 'medium'}">${rep.status}</span></td>
+                    `;
+                    reportTableBody.appendChild(tr);
+                });
+            }
+        });
+        unsubscribeListeners.push(unsubReports);
+
+        // Listen for Attendance
+        const unsubAttendance = onSnapshot(collection(db, "attendance"), (snapshot) => {
+            const attendanceList = document.querySelector('.attendance-list');
+            if (attendanceList) {
+                attendanceList.innerHTML = '';
+                snapshot.forEach(doc => {
+                    const att = doc.data();
+                    const li = document.createElement('li');
+                    li.className = 'status-item';
+                    const color = att.status === 'Clocked In' ? '#10b981' : '#ef4444';
+                    li.innerHTML = `
+                        <span class="dot" style="background: ${color};"></span> 
+                        <span>${att.name} (${att.status})</span>
+                    `;
+                    attendanceList.appendChild(li);
+                });
+            }
+        });
+        unsubscribeListeners.push(unsubAttendance);
+    }
+
+    // Manager Assign Task
+    const assignTaskForm = document.getElementById('mgr-assign-task-form');
+    if (assignTaskForm) {
+        assignTaskForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const title = assignTaskForm.querySelector('input').value;
+            const empSelect = assignTaskForm.querySelector('select');
+            const empName = empSelect.options[empSelect.selectedIndex].text;
+
+            if (title && empSelect.value && db) {
+                await addDoc(collection(db, "tasks"), {
+                    title: title,
+                    priority: "Medium",
+                    status: "Pending",
+                    assignedTo: empName,
+                    createdAt: Date.now()
+                });
+                alert(`Task "${title}" assigned to ${empName}.`);
+                assignTaskForm.reset();
+            }
+        });
+    }
+
+    // Manager Role Assignment
+    const roleForm = document.getElementById('mgr-role-form');
+    if (roleForm) {
+        roleForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const empName = document.getElementById('role-emp-select').value;
+            const newRole = document.getElementById('role-input').value;
+
+            if (empName && newRole && db) {
+                await addDoc(collection(db, "notifications"), {
+                    message: `Manager updated ${empName}'s role to: ${newRole}`,
+                    createdAt: Date.now()
+                });
+                alert(`Role for ${empName} updated. Owner notified.`);
+                roleForm.reset();
+            }
+        });
+    }
+
+    // --- 6. Owner Dashboard Logic ---
+    function initOwnerDashboard() {
+        // Notifications
+        const qNotif = query(collection(db, "notifications"), orderBy("createdAt", "desc"), limit(10));
+        const unsubNotif = onSnapshot(qNotif, (snapshot) => {
+            const notifList = document.getElementById('owner-notifications');
+            if (notifList) {
+                notifList.innerHTML = '';
+                snapshot.forEach(doc => {
+                    const note = doc.data();
+                    const li = document.createElement('li');
+                    li.textContent = note.message;
+                    notifList.appendChild(li);
+                });
+            }
+        });
+        unsubscribeListeners.push(unsubNotif);
+
+        // Inquiries
+        const qInquiries = query(collection(db, "inquiries"), orderBy("createdAt", "desc"), limit(10));
+        const unsubInquiries = onSnapshot(qInquiries, (snapshot) => {
+            const inquiryList = document.getElementById('owner-inquiries-list');
+            if (inquiryList) {
+                inquiryList.innerHTML = '';
+                if (snapshot.empty) {
+                    inquiryList.innerHTML = '<tr><td colspan="4">No inquiries yet.</td></tr>';
+                } else {
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${data.name}</td>
+                            <td>${data.email}</td>
+                            <td>${data.message}</td>
+                            <td>${data.dateString}</td>
+                        `;
+                        inquiryList.appendChild(tr);
+                    });
+                }
+            }
+        });
+        unsubscribeListeners.push(unsubInquiries);
+    }
+
+    // --- 7. AI Chatbot Logic & Inquiry Form ---
+    const chatInput = document.getElementById('ai-chat-input');
+    const chatSend = document.getElementById('ai-chat-send');
+    const chatMessages = document.getElementById('ai-chat-messages');
+    const inquiryForm = document.getElementById('inquiry-form');
+
+    // Handle Inquiry Form Submission
+    if (inquiryForm) {
+        inquiryForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = inquiryForm.querySelector('input[type="text"]').value;
+            const email = inquiryForm.querySelector('input[type="email"]').value;
+            const message = inquiryForm.querySelector('textarea').value;
+
+            if (name && email && db) {
+                try {
+                    await addDoc(collection(db, "inquiries"), {
+                        name: name,
+                        email: email,
+                        message: message,
+                        createdAt: Date.now(),
+                        dateString: new Date().toLocaleDateString()
+                    });
+                    alert("Thank you! Your inquiry has been sent. We will contact you shortly.");
+                    inquiryForm.reset();
+                } catch (error) {
+                    console.error("Error sending inquiry:", error);
+                    alert("There was an error sending your message. Please try again.");
+                }
+            }
+        });
+    }
+
+    function addMessage(text, sender) {
+        const div = document.createElement('div');
+        div.className = sender === 'ai' ? 'ai-msg' : 'user-msg';
+        div.textContent = text;
+        chatMessages.appendChild(div);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    if (chatSend) {
+        chatSend.addEventListener('click', () => {
+            const text = chatInput.value;
+            if (!text) return;
+
+            addMessage(text, 'user');
+            chatInput.value = '';
+
+            setTimeout(() => {
+                addMessage("Great! I've tentatively booked that slot for you. One of our experts will call you then.", 'ai');
+            }, 1000);
+        });
+    }
+});
