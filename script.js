@@ -299,6 +299,10 @@ if (navBtns.logout) navBtns.logout.addEventListener('click', () => {
     unsubscribeListeners.forEach(unsub => unsub());
     unsubscribeListeners = [];
 
+    // Clear login form
+    const loginForm = document.getElementById('unified-login-form');
+    if (loginForm) loginForm.reset();
+
     navBtns.login.classList.remove('hidden');
     navBtns.logout.classList.add('hidden');
     switchView('landing');
