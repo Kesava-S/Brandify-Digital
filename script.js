@@ -309,7 +309,7 @@ if (navBtns.logout) navBtns.logout.addEventListener('click', async () => {
 
         navBtns.login.classList.remove('hidden');
         navBtns.logout.classList.add('hidden');
-        switchView('landing');
+        switchView('login'); // Redirect to login page instead of landing
         alert("Logged out successfully.");
     } catch (error) {
         console.error("Logout error:", error);
@@ -577,6 +577,55 @@ const btnClockOut = document.getElementById('emp-clock-out');
 
 // --- 5. Manager Dashboard Logic ---
 function initManagerDashboard() {
+    // 0. Manager's Own Tasks (Assigned by Admin)
+    // We need to inject this section dynamically if it doesn't exist in HTML
+    let mgrTaskContainer = document.getElementById('mgr-own-tasks');
+    if (!mgrTaskContainer) {
+        const grid = document.querySelector('#view-dashboard-manager .dashboard-grid');
+        if (grid) {
+            mgrTaskContainer = document.createElement('div');
+            mgrTaskContainer.className = 'card full-width'; // Make it full width
+            mgrTaskContainer.id = 'mgr-own-tasks';
+            mgrTaskContainer.innerHTML = `
+                <h3>My Tasks (From Admin)</h3>
+                <ul class="task-list" id="mgr-task-list">
+                    <li>Loading tasks...</li>
+                </ul>
+            `;
+            grid.prepend(mgrTaskContainer); // Add to top of grid
+        }
+    }
+
+    // Listen for tasks assigned TO the manager (where assignedTo == manager's name or email)
+    // Note: In current schema, assignedTo stores Name. Ideally should be ID/Email. 
+    // We'll check both for robustness.
+    const qMgrTasks = query(collection(db, "tasks"), where("assignedTo", "in", [currentUser.name, currentUser.email]));
+    const unsubMgrTasks = onSnapshot(qMgrTasks, (snapshot) => {
+        const list = document.getElementById('mgr-task-list');
+        if (list) {
+            list.innerHTML = '';
+            if (snapshot.empty) {
+                list.innerHTML = '<li>No tasks assigned to you.</li>';
+            } else {
+                snapshot.forEach(doc => {
+                    const task = doc.data();
+                    const li = document.createElement('li');
+                    li.className = 'task-item';
+                    li.innerHTML = `
+                        <div>
+                            <strong>${task.title}</strong>
+                            <p class="text-small">${task.description || 'No description'}</p>
+                            <span class="tag ${task.priority === 'High' ? 'high' : 'medium'}">${task.priority}</span>
+                        </div>
+                        <span class="status-badge ${task.status === 'Completed' ? 'status-completed' : 'status-pending'}">${task.status}</span>
+                    `;
+                    list.appendChild(li);
+                });
+            }
+        }
+    });
+    unsubscribeListeners.push(unsubMgrTasks);
+
     // Fetch Employees for Dropdowns
     const qEmployees = query(collection(db, "users"), where("role", "==", "employee"));
     const unsubEmployees = onSnapshot(qEmployees, (snapshot) => {
@@ -844,7 +893,7 @@ function initOwnerDashboard() {
     const qUsers = query(collection(db, "users"));
     const unsubUsers = onSnapshot(qUsers, (snapshot) => {
         if (userList) {
-            userList.innerHTML = '';
+            userList.innerHTML = ''; // Clear list to prevent duplicates
             snapshot.forEach(doc => {
                 const user = doc.data();
                 // Don't allow deleting self
