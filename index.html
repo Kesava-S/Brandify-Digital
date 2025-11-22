@@ -528,22 +528,27 @@
                     <div class="admin-grid">
                         <div class="admin-panel">
                             <h4>👥 Assign Roles & Users</h4>
-                            <div class="control-row" style="flex-wrap: wrap; gap: 10px;">
-                                <input type="text" id="admin-new-user-name" placeholder="Name" required
-                                    style="flex: 1;">
-                                <input type="email" id="admin-new-user-email" placeholder="Email" required
-                                    style="flex: 1;">
-                                <input type="password" id="admin-new-user-pass" placeholder="Password" required
-                                    style="flex: 1;">
-                                <select id="admin-new-user-role" required style="flex: 1;">
+                            <div class="form-group">
+                                <input type="text" id="admin-new-user-name" placeholder="Name" required>
+                            </div>
+                            <div class="form-group">
+                                <input type="email" id="admin-new-user-email" placeholder="Email" required>
+                            </div>
+                            <div class="form-group">
+                                <input type="password" id="admin-new-user-pass" placeholder="Password" required>
+                            </div>
+                            <div class="form-group">
+                                <select id="admin-new-user-role" required>
                                     <option value="">Select Role</option>
                                     <option value="manager">Manager</option>
                                     <option value="employee">Employee</option>
                                     <option value="client">Client</option>
                                 </select>
-                                <input type="text" id="admin-new-user-dept" placeholder="Department" style="flex: 1;">
-                                <button id="admin-add-user-btn" class="btn-primary">Add User</button>
                             </div>
+                            <div class="form-group">
+                                <input type="text" id="admin-new-user-dept" placeholder="Department">
+                            </div>
+                            <button id="admin-add-user-btn" class="btn-primary full-width-btn">Add User</button>
                             <!-- User List Removed from here -->
                         </div>
 
