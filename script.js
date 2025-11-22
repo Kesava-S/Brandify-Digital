@@ -25,7 +25,7 @@ try {
     console.log("Firebase initialized");
 } catch (error) {
     console.error("Firebase initialization failed. Make sure to update firebaseConfig.", error);
-    alert("Firebase not configured! Please update script.js with your Firebase keys.");
+    showToast("Firebase not configured! Please update script.js with your Firebase keys.", "error");
 }
 
 // --- DATA SEEDING (Run once to populate DB) ---
@@ -146,7 +146,7 @@ async function seedDatabase() {
         await seed("invoices", INITIAL_DATA.invoices);
         await seed("messages", INITIAL_DATA.messages);
 
-        alert("Database seeded with new comprehensive model! You can now login.");
+        showToast("Database seeded with new comprehensive model! You can now login.", "success");
     }
 }
 
@@ -308,7 +308,7 @@ if (loginForm) {
         const password = document.getElementById('login-password').value; // Assuming a password input exists
 
         if (!db) {
-            alert("Database not connected.");
+            showToast("Database not connected.", "error");
             return;
         }
         try {
@@ -391,7 +391,7 @@ if (loginForm) {
                     switchView(roleViewMap[currentUser.role]);
                 } else {
                     console.error("Unknown role:", currentUser.role);
-                    alert("Login successful but role is undefined.");
+                    showToast("Login successful but role is undefined.", "error");
                 }
             } else {
                 // Auto-create profile if missing
@@ -412,7 +412,7 @@ if (loginForm) {
                 const docRef = await addDoc(collection(db, "users"), newProfile);
                 currentUser = { id: docRef.id, ...newProfile };
 
-                alert(`Profile created for ${email}. Logging in...`);
+                showToast(`Profile created for ${email}. Logging in...`, "success");
                 navBtns.login.classList.add('hidden');
                 navBtns.logout.classList.remove('hidden');
 
@@ -444,7 +444,7 @@ if (loginForm) {
                     msg = "Network error. Please check your internet connection.";
                     break;
             }
-            alert(msg);
+            showToast(msg, "error");
         }
     });
 }
@@ -642,10 +642,10 @@ if (empReportForm) {
                 date: new Date().toLocaleDateString(),
                 status: "Pending"
             });
-            alert("Report submitted successfully!");
+            showToast("Report submitted successfully!", "success");
             empReportForm.reset();
         } else {
-            alert("Please select a task and enter report details.");
+            showToast("Please select a task and enter report details.", "info");
         }
     });
 }
@@ -910,7 +910,7 @@ function initManagerDashboard() {
                     source: "Manager",
                     createdAt: Date.now()
                 });
-                alert(`Task "${title}" assigned to ${empName}.`);
+                showToast(`Task "${title}" assigned to ${empName}.`, "success");
                 newForm.reset();
             }
         });
@@ -949,11 +949,11 @@ function initManagerDashboard() {
                         createdAt: Date.now()
                     });
 
-                    alert(`Employee position updated to ${newRole}!`);
+                    showToast(`Employee position updated to ${newRole}!`, "success");
                     newRoleForm.reset();
                 } catch (error) {
                     console.error("Error updating role:", error);
-                    alert("Failed to update role.");
+                    showToast("Failed to update role.", "error");
                 }
             }
         });
@@ -992,14 +992,14 @@ function initManagerDashboard() {
                         createdAt: Date.now()
                     });
 
-                    alert(`Employee ${name} added successfully! Login ID: ${email}`);
+                    showToast(`Employee ${name} added successfully! Login ID: ${email}`, "success");
                     newEmpForm.reset();
                 } catch (err) {
                     console.error("Error adding employee:", err);
-                    alert("Failed to add employee: " + err.message);
+                    showToast("Failed to add employee: " + err.message, "error");
                 }
             } else {
-                alert("Please fill in all required fields.");
+                showToast("Please fill in all required fields.", "info");
             }
         });
     }
@@ -1116,7 +1116,7 @@ function initOwnerDashboard() {
                             }
                         } catch (err) {
                             console.error("Error deleting user:", err);
-                            alert("Failed to delete user.");
+                            showToast("Failed to delete user.", "error");
                         }
                     }
                 });
@@ -1170,7 +1170,7 @@ function initOwnerDashboard() {
                         });
                     }
 
-                    alert(`User ${name} added successfully! They can login with the provided password.`);
+                    showToast(`User ${name} added successfully! They can login with the provided password.`, "success");
                     // Reset form
                     document.getElementById('admin-new-user-name').value = '';
                     emailInput.value = '';
@@ -1179,10 +1179,10 @@ function initOwnerDashboard() {
                     document.getElementById('admin-new-user-dept').value = '';
                 } catch (e) {
                     console.error("Error adding user: ", e);
-                    alert("Failed to add user: " + e.message);
+                    showToast("Failed to add user: " + e.message, "error");
                 }
             } else {
-                alert("Please fill in all required fields (Name, Email, Password, Role).");
+                showToast("Please fill in all required fields (Name, Email, Password, Role).", "info");
             }
         });
     }
@@ -1243,11 +1243,11 @@ function initOwnerDashboard() {
                         createdAt: Date.now()
                     });
 
-                    alert("Task assigned successfully!");
+                    showToast("Task assigned successfully!", "success");
                     ownerTaskForm.reset();
                 } catch (err) {
                     console.error("Error assigning task:", err);
-                    alert("Failed to assign task.");
+                    showToast("Failed to assign task.", "error");
                 }
             }
         });
@@ -1286,11 +1286,11 @@ function initOwnerDashboard() {
                         createdAt: Date.now(),
                         createdBy: currentUser.email
                     });
-                    alert("Announcement posted!");
+                    showToast("Announcement posted!", "success");
                     document.getElementById('announcement-input').value = '';
                 } catch (err) {
                     console.error("Error posting announcement:", err);
-                    alert("Failed to post announcement.");
+                    showToast("Failed to post announcement.", "error");
                 }
             }
         });
@@ -1486,13 +1486,13 @@ if (multiStepForm) {
                     dateString: new Date().toLocaleDateString(),
                     status: 'New'
                 });
-                alert("Thank you! Your comprehensive inquiry has been received. We will analyze your needs and contact you shortly.");
+                showToast("Thank you! Your comprehensive inquiry has been received. We will analyze your needs and contact you shortly.", "success");
                 multiStepForm.reset();
                 currentStep = 0;
                 updateStep();
             } catch (error) {
                 console.error("Error sending inquiry:", error);
-                alert("There was an error sending your message. Please try again.");
+                showToast("There was an error sending your message. Please try again.", "error");
             }
         }
     });
