@@ -591,237 +591,104 @@ function initEmployeeDashboard() {
     }
 }
 
-// Listen for Payslips
-const qPayslips = query(collection(db, "payslips"), where("employeeId", "==", currentUser.email));
-const unsubPayslips = onSnapshot(qPayslips, (snapshot) => {
-    const payslipList = document.getElementById('emp-payslip-list');
-    if (payslipList) {
-        payslipList.innerHTML = '';
-        // Listen for Payslips
-        const qPayslips = query(collection(db, "payslips"), where("employeeId", "==", currentUser.email));
-        const unsubPayslips = onSnapshot(qPayslips, (snapshot) => {
-            const payslipList = document.getElementById('emp-payslip-list');
-            if (payslipList) {
-                payslipList.innerHTML = '';
-                if (snapshot.empty) {
-                    payslipList.innerHTML = '<li>No payslips found.</li>';
-                } else {
-                    snapshot.forEach(doc => {
-                        const pay = doc.data();
-                        const li = document.createElement('li');
-                        li.innerHTML = `📄 <a href="${pay.downloadUrl || '#'}" target="_blank">${pay.month} - $${pay.netPay}</a>`;
-                        payslipList.appendChild(li);
-                    });
-                }
+// --- 5. Manager Dashboard Logic ---
+function initManagerDashboard() {
+    document.querySelector('.user-name-display').textContent = currentUser.name;
+
+    // 1. Render My Tasks (Manager's own tasks)
+    renderMyTasks('mgr-task-list', currentUser.name);
+
+    // 2. Populate Employee Dropdown for Task Assignment
+    const qEmps = query(collection(db, "users"), where("role", "==", "employee"));
+    const unsubEmps = onSnapshot(qEmps, (snapshot) => {
+        const select = document.getElementById('task-emp-select');
+        const roleSelect = document.getElementById('role-emp-select');
+
+        if (select) select.innerHTML = '<option value="">Select Employee</option>';
+        if (roleSelect) roleSelect.innerHTML = '<option value="">Select Employee</option>';
+
+        snapshot.forEach(doc => {
+            const user = doc.data();
+            if (select) {
+                const opt = document.createElement('option');
+                opt.value = user.name;
+                opt.textContent = user.name;
+                select.appendChild(opt);
+            }
+            if (roleSelect) {
+                const opt = document.createElement('option');
+                opt.value = doc.id; // Use ID for role update
+                opt.textContent = user.name;
+                roleSelect.appendChild(opt);
             }
         });
-        unsubscribeListeners.push(unsubPayslips);
+    });
+    unsubscribeListeners.push(unsubEmps);
 
-        // Listen for Announcements (Employee Area)
-        const qAnnounceList = query(collection(db, "announcements"), orderBy("createdAt", "desc"), limit(5));
-        const unsubAnnounceList = onSnapshot(qAnnounceList, (snapshot) => {
-            let announceContainer = document.getElementById('emp-announcement-list');
-            if (announceContainer) {
-                announceContainer.innerHTML = '';
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    const target = data.targetAudience || 'all';
-                    let show = false;
-                    if (target === 'all' || target === 'internal' || target === 'employees') show = true;
-
-                    if (show) {
-                        const li = document.createElement('li');
-                        li.innerHTML = `<strong>${data.message}</strong> <br><small>${new Date(data.createdAt).toLocaleDateString()}</small>`;
-                        announceContainer.appendChild(li);
-                    }
-                });
-            }
-        });
-        unsubscribeListeners.push(unsubAnnounceList);
-    }
-
-    // Employee Report Submission
-    const empReportForm = document.getElementById('emp-report-form');
-    if (empReportForm) {
-        empReportForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const taskId = document.getElementById('report-task-select').value;
-            const text = empReportForm.querySelector('textarea').value;
-
-            if (taskId && text && db) {
-                // Get task title for reference
-                const taskSelect = document.getElementById('report-task-select');
-                const taskTitle = taskSelect.options[taskSelect.selectedIndex].text;
-
-                await addDoc(collection(db, "reports"), {
-                    taskId: taskId,
-                    taskTitle: taskTitle,
-                    submittedBy: currentUser.name,
-                    reportText: text,
-                    submittedAt: Date.now(),
-                    date: new Date().toLocaleDateString(),
-                    status: "Pending"
-                });
-                showToast("Report submitted successfully!", "success");
-                empReportForm.reset();
-            } else {
-                showToast("Please select a task and enter report details.", "info");
-            }
-        });
-    }
-
-    // Clock In/Out Logic
-    const btnClockIn = document.getElementById('emp-clock-in');
-    const btnClockOut = document.getElementById('emp-clock-out');
-
-    // --- 5. Manager Dashboard Logic ---
-    function initManagerDashboard() {
-        // 0. Manager's Own Tasks (Assigned by Admin)
-        // We need to inject this section dynamically if it doesn't exist in HTML
-        let mgrTaskContainer = document.getElementById('mgr-own-tasks');
-        if (!mgrTaskContainer) {
-            const grid = document.querySelector('#view-dashboard-manager .dashboard-grid');
-            if (grid) {
-                mgrTaskContainer = document.createElement('div');
-                mgrTaskContainer.className = 'card full-width'; // Make it full width
-                mgrTaskContainer.id = 'mgr-own-tasks';
-                mgrTaskContainer.innerHTML = `
-                <h3>My Tasks (From Admin)</h3>
-                <ul class="task-list" id="mgr-task-list">
-                    <li>Loading tasks...</li>
-                </ul>
-            `;
-                grid.prepend(mgrTaskContainer); // Add to top of grid
-            }
-        }
-
-        // Listen for tasks assigned TO the manager (where assignedTo == manager's name or email)
-        // Note: In current schema, assignedTo stores Name. Ideally should be ID/Email. 
-        // We'll check both for robustness.
-        const qMgrTasks = query(collection(db, "tasks"), where("assignedTo", "in", [currentUser.name, currentUser.email]));
-        const unsubMgrTasks = onSnapshot(qMgrTasks, (snapshot) => {
-            const list = document.getElementById('mgr-task-list');
-            if (list) {
-                list.innerHTML = '';
-                if (snapshot.empty) {
-                    list.innerHTML = '<li>No tasks assigned to you.</li>';
-                } else {
-                    snapshot.forEach(doc => {
-                        const task = doc.data();
-
-                        // Check source
-                        const sourceBadge = task.source === 'Executive'
-                            ? '<span class="tag high" style="background:#7c3aed; color:white;">From Executive</span>'
-                            : '';
-
-                        const li = document.createElement('li');
-                        li.className = 'task-item';
-                        li.innerHTML = `
-                        <div>
-                            <div style="display:flex; align-items:center; gap:10px;">
-                                <strong>${task.title}</strong>
-                                ${sourceBadge}
-                            </div>
-                            <p class="text-small">${task.description || 'No description'}</p>
-                            <span class="tag ${task.priority === 'High' ? 'high' : 'medium'}">${task.priority}</span>
-                        </div>
-                        <span class="status-badge ${task.status === 'Completed' ? 'status-completed' : 'status-pending'}">${task.status}</span>
-                    `;
-                        list.appendChild(li);
-                    });
-                }
-            }
-        });
-        unsubscribeListeners.push(unsubMgrTasks);
-
-        // Fetch Employees for Dropdowns
-        const qEmployees = query(collection(db, "users"), where("role", "==", "employee"));
-        const unsubEmployees = onSnapshot(qEmployees, (snapshot) => {
-            const taskSelect = document.getElementById('task-emp-select');
-            const roleSelect = document.getElementById('role-emp-select');
-
-            // Clear existing options (keep default)
-            if (taskSelect) taskSelect.innerHTML = '<option value="">Select Employee</option>';
-            if (roleSelect) roleSelect.innerHTML = '<option value="">Select Employee</option>';
-
+    // 3. Manager Task Monitoring (Tasks assigned to OTHERS)
+    const qMgrTasks = query(collection(db, "tasks"), where("assignedTo", "!=", currentUser.name));
+    const unsubMgrTasks = onSnapshot(qMgrTasks, (snapshot) => {
+        const table = document.getElementById('mgr-task-monitoring-table');
+        if (table) {
+            table.innerHTML = '';
             snapshot.forEach(doc => {
-                const emp = doc.data();
-                const empId = doc.id;
-                const empName = emp.name || emp.email;
+                const task = doc.data();
+                // Filter: Show if NOT assigned to me (i.e., assigned to an employee)
+                if (task.assignedTo !== currentUser.name) {
+                    const tr = document.createElement('tr');
+                    const isCompleted = task.status === 'Completed';
 
-                if (taskSelect) {
-                    const opt = document.createElement('option');
-                    opt.value = empName; // Storing name for task assignment as per current schema
-                    opt.textContent = empName;
-                    taskSelect.appendChild(opt);
-                }
-                if (roleSelect) {
-                    const opt = document.createElement('option');
-                    opt.value = empId; // Storing ID for role update
-                    // Display Name + Current Position (or Role if no position)
-                    // This ensures the user sees the updated role immediately
-                    const displayRole = emp.position ? emp.position : emp.role.toUpperCase();
-                    opt.textContent = `${empName} - ${displayRole}`;
-                    roleSelect.appendChild(opt);
+                    tr.innerHTML = `
+                        <td>${task.title}</td>
+                        <td>${task.assignedTo}</td>
+                        <td><span class="status-badge ${isCompleted ? 'status-completed' : 'status-pending'}">${task.status}</span></td>
+                        <td>${task.deadline || 'N/A'}</td>
+                    `;
+                    table.appendChild(tr);
                 }
             });
-        });
-        unsubscribeListeners.push(unsubEmployees);
+        }
+    });
+    unsubscribeListeners.push(unsubMgrTasks);
 
-        // Listen for Reports
-        const qReports = query(collection(db, "reports"), orderBy("createdAt", "desc"), limit(10));
-        const unsubReports = onSnapshot(qReports, (snapshot) => {
-            const tableBody = document.getElementById('mgr-reports-table');
-            if (tableBody) {
-                tableBody.innerHTML = '';
-                snapshot.forEach(doc => {
-                    const report = doc.data();
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                    <td>${report.submittedBy}</td>
-                    <td>${new Date(report.createdAt).toLocaleDateString()}</td>
-                    <td>${report.taskTitle}</td>
-                    <td><span class="status-badge status-completed">Submitted</span></td>
+    // 4. Manager Inquiries View
+    const qMgrInquiries = query(collection(db, "inquiries"), orderBy("createdAt", "desc"), limit(20));
+    const unsubMgrInquiries = onSnapshot(qMgrInquiries, (snapshot) => {
+        const inquiryTable = document.getElementById('mgr-inquiry-table');
+        if (inquiryTable) {
+            inquiryTable.innerHTML = '';
+            snapshot.forEach(doc => {
+                const inq = doc.data();
+                const tr = document.createElement('tr');
+                const needs = Array.isArray(inq.autoNeeds) ? inq.autoNeeds.join(', ') : (inq.autoNeeds || 'N/A');
+
+                tr.innerHTML = `
+                    <td>${inq.contactPerson || inq.name}</td>
+                    <td>${inq.contactEmail || inq.email}</td>
+                    <td>${inq.whatsapp || 'N/A'}</td>
+                    <td>${inq.businessName || 'N/A'}</td>
+                    <td><span class="text-small" style="display:block; max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${needs}">${needs}</span></td>
+                    <td>${inq.dateString}</td>
                 `;
-                    tableBody.appendChild(row);
-                });
-            }
-        });
-        unsubscribeListeners.push(unsubReports);
+                inquiryTable.appendChild(tr);
+            });
+        }
+    });
+    unsubscribeListeners.push(unsubMgrInquiries);
 
-        // Listen for Attendance
-        const unsubAttendance = onSnapshot(collection(db, "attendance"), (snapshot) => {
-            const attendanceList = document.querySelector('.attendance-list');
-            if (attendanceList) {
-                attendanceList.innerHTML = '';
+    // 5. Employee Requests
+    const qRequests = query(collection(db, "employee_requests"), where("managerId", "==", currentUser.email));
+    const unsubRequests = onSnapshot(qRequests, (snapshot) => {
+        const reqList = document.getElementById('mgr-request-list');
+        if (reqList) {
+            reqList.innerHTML = '';
+            if (snapshot.empty) {
+                reqList.innerHTML = '<li>No pending requests.</li>';
+            } else {
                 snapshot.forEach(doc => {
-                    const att = doc.data();
+                    const req = doc.data();
                     const li = document.createElement('li');
-                    li.className = 'status-item';
-                    const color = att.status === 'Clocked In' ? '#10b981' : '#ef4444';
                     li.innerHTML = `
-                        <span class="dot" style="background: ${color};"></span> 
-                        <span>${att.name} (${att.status})</span>
-                    `;
-                    attendanceList.appendChild(li);
-                });
-            }
-        });
-        unsubscribeListeners.push(unsubAttendance);
-
-        // Listen for Employee Requests
-        const qRequests = query(collection(db, "employee_requests"), where("managerId", "==", currentUser.email));
-        const unsubRequests = onSnapshot(qRequests, (snapshot) => {
-            const reqList = document.getElementById('mgr-request-list');
-            if (reqList) {
-                reqList.innerHTML = '';
-                if (snapshot.empty) {
-                    reqList.innerHTML = '<li>No pending requests.</li>';
-                } else {
-                    snapshot.forEach(doc => {
-                        const req = doc.data();
-                        const li = document.createElement('li');
-                        li.innerHTML = `
                         <strong>${req.requestType}</strong> from ${req.employeeId} <br>
                         <span class="text-small">${req.details}</span>
                         <div class="action-buttons" style="margin-top:0.5rem;">
@@ -829,243 +696,193 @@ const unsubPayslips = onSnapshot(qPayslips, (snapshot) => {
                             <button class="btn-small" style="background:#ef4444;">Reject</button>
                         </div>
                     `;
-                        reqList.appendChild(li);
-                    });
-                }
+                    reqList.appendChild(li);
+                });
             }
-        });
-        unsubscribeListeners.push(unsubRequests);
+        }
+    });
+    unsubscribeListeners.push(unsubRequests);
 
-        // Listen for Notifications (Manager)
-        // Query for notifications where targetRole is 'manager' OR 'all'
-        const qNotif = query(collection(db, "notifications"), where("targetRole", "==", "manager"), orderBy("createdAt", "desc"), limit(10));
-
-        const unsubNotif = onSnapshot(qNotif, (snapshot) => {
-            let notifContainer = document.getElementById('manager-notifications');
-
-            // Ensure container exists
-            if (!notifContainer) {
-                const header = document.querySelector('#view-dashboard-manager .dashboard-header');
-                if (header) {
-                    notifContainer = document.createElement('ul');
-                    notifContainer.id = 'manager-notifications';
-                    notifContainer.className = 'notification-list';
-                    notifContainer.style.marginBottom = '1rem';
-                    notifContainer.style.background = '#fff3cd'; // Yellow background for visibility
-                    notifContainer.style.padding = '10px';
-                    notifContainer.style.borderRadius = '8px';
-                    header.after(notifContainer);
-                }
+    // 6. Notifications
+    const qNotif = query(collection(db, "notifications"), where("targetRole", "==", "manager"), orderBy("createdAt", "desc"), limit(10));
+    const unsubNotif = onSnapshot(qNotif, (snapshot) => {
+        let notifContainer = document.getElementById('manager-notifications');
+        if (!notifContainer) {
+            const header = document.querySelector('#view-dashboard-manager .dashboard-header');
+            if (header) {
+                notifContainer = document.createElement('ul');
+                notifContainer.id = 'manager-notifications';
+                notifContainer.className = 'notification-list';
+                notifContainer.style.marginBottom = '1rem';
+                notifContainer.style.background = '#fff3cd';
+                notifContainer.style.padding = '10px';
+                notifContainer.style.borderRadius = '8px';
+                header.after(notifContainer);
             }
-
-            if (notifContainer) {
-                notifContainer.innerHTML = '';
-                if (snapshot.empty) {
-                    notifContainer.style.display = 'none'; // Hide if empty
-                } else {
-                    notifContainer.style.display = 'block';
-                    snapshot.forEach(doc => {
-                        const note = doc.data();
-                        const li = document.createElement('li');
-                        li.innerHTML = `🔔 <strong>Notification:</strong> ${note.message} <br><small>${new Date(note.createdAt).toLocaleTimeString()}</small>`;
-                        li.style.marginBottom = '5px';
-                        notifContainer.appendChild(li);
-                    });
-                }
-            }
-        });
-        unsubscribeListeners.push(unsubNotif);
-
-        // --- Manager Listeners (Moved here to prevent duplicates) ---
-
-        // Manager Assign Task Listener
-        const assignTaskForm = document.getElementById('mgr-assign-task-form');
-        if (assignTaskForm) {
-            const newForm = assignTaskForm.cloneNode(true);
-            assignTaskForm.parentNode.replaceChild(newForm, assignTaskForm);
-
-            newForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const title = newForm.querySelector('#task-title').value;
-                const desc = newForm.querySelector('#task-desc').value;
-                const project = newForm.querySelector('#task-project').value;
-                const deadline = newForm.querySelector('#task-deadline').value;
-                const empSelect = newForm.querySelector('#task-emp-select');
-                const empName = empSelect.options[empSelect.selectedIndex].text;
-
-                if (title && empSelect.value && db) {
-                    await addDoc(collection(db, "tasks"), {
-                        title: title,
-                        description: desc,
-                        projectId: project,
-                        deadline: deadline,
-                        priority: "Medium",
-                        status: "Pending",
-                        assignedTo: empName,
-                        source: "Manager",
-                        createdAt: Date.now()
-                    });
-                    showToast(`Task "${title}" assigned to ${empName}.`, "success");
-                    newForm.reset();
-                }
-            });
         }
 
-        // Manager Role Assignment Listener
-        const mgrRoleForm = document.getElementById('mgr-role-form');
-        if (mgrRoleForm) {
-            const newRoleForm = mgrRoleForm.cloneNode(true);
-            mgrRoleForm.parentNode.replaceChild(newRoleForm, mgrRoleForm);
-
-            newRoleForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const empId = newRoleForm.querySelector('#role-emp-select').value;
-                const newRole = newRoleForm.querySelector('#role-input').value;
-
-                if (empId && newRole && db) {
-                    try {
-                        const userRef = doc(db, "users", empId);
-                        const userSnap = await getDoc(userRef);
-                        const userName = userSnap.exists() ? (userSnap.data().name || userSnap.data().email) : "Employee";
-
-                        await updateDoc(userRef, { position: newRole });
-
-                        // Notify Admin
-                        await addDoc(collection(db, "notifications"), {
-                            message: `Manager updated ${userName}'s position to: ${newRole}`,
-                            targetRole: 'owner',
-                            createdAt: Date.now()
-                        });
-
-                        // Notify Employee
-                        await addDoc(collection(db, "notifications"), {
-                            message: `Your position has been updated to: ${newRole}`,
-                            targetEmail: userSnap.data().email,
-                            createdAt: Date.now()
-                        });
-
-                        showToast(`Employee position updated to ${newRole}!`, "success");
-                        newRoleForm.reset();
-                    } catch (error) {
-                        console.error("Error updating role:", error);
-                        showToast("Failed to update role.", "error");
-                    }
-                }
-            });
-        }
-
-        // Manager Add Employee Logic
-        const mgrAddEmpForm = document.getElementById('mgr-add-emp-form');
-        if (mgrAddEmpForm) {
-            const newEmpForm = mgrAddEmpForm.cloneNode(true);
-            mgrAddEmpForm.parentNode.replaceChild(newEmpForm, mgrAddEmpForm);
-
-            newEmpForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const name = newEmpForm.querySelector('#mgr-new-emp-name').value;
-                const email = newEmpForm.querySelector('#mgr-new-emp-email').value;
-                const password = newEmpForm.querySelector('#mgr-new-emp-pass').value;
-                const role = newEmpForm.querySelector('#mgr-new-emp-role').value;
-                const dept = newEmpForm.querySelector('#mgr-new-emp-dept').value;
-
-                if (name && email && password && db) {
-                    try {
-                        // 1. Create Auth User (Secondary App)
-                        const secondaryApp = initializeApp(firebaseConfig, "SecondaryMgr");
-                        const secondaryAuth = getAuth(secondaryApp);
-                        await createUserWithEmailAndPassword(secondaryAuth, email, password);
-                        await signOut(secondaryAuth);
-                        await deleteApp(secondaryApp);
-
-                        // 2. Create Firestore Profile
-                        await addDoc(collection(db, "users"), {
-                            name: name,
-                            email: email,
-                            role: role, // 'employee' or 'intern'
-                            department: dept || 'Operations',
-                            position: role.charAt(0).toUpperCase() + role.slice(1),
-                            createdAt: Date.now()
-                        });
-
-                        showToast(`Employee ${name} added successfully! Login ID: ${email}`, "success");
-                        newEmpForm.reset();
-                    } catch (err) {
-                        console.error("Error adding employee:", err);
-                        showToast("Failed to add employee: " + err.message, "error");
-                    }
-                } else {
-                    showToast("Please fill in all required fields.", "info");
-                }
-            });
-        }
-    }
-
-    // Manager Assign Task
-    // --- 6. Owner Dashboard Logic ---
-    function initOwnerDashboard() {
-        // Notifications (Admin/Owner)
-        const qNotif = query(collection(db, "notifications"), where("targetRole", "==", "owner"), orderBy("createdAt", "desc"), limit(10));
-        const unsubNotif = onSnapshot(qNotif, (snapshot) => {
-            const notifList = document.getElementById('owner-notifications');
-            if (notifList) {
-                notifList.innerHTML = '';
+        if (notifContainer) {
+            notifContainer.innerHTML = '';
+            if (snapshot.empty) {
+                notifContainer.style.display = 'none';
+            } else {
+                notifContainer.style.display = 'block';
                 snapshot.forEach(doc => {
                     const note = doc.data();
                     const li = document.createElement('li');
-                    li.textContent = note.message;
-                    notifList.appendChild(li);
+                    li.innerHTML = `🔔 <strong>Notification:</strong> ${note.message} <br><small>${new Date(note.createdAt).toLocaleTimeString()}</small>`;
+                    li.style.marginBottom = '5px';
+                    notifContainer.appendChild(li);
                 });
             }
-        });
-        unsubscribeListeners.push(unsubNotif);
+        }
+    });
+    unsubscribeListeners.push(unsubNotif);
 
-        // Inquiries (Updated for Table)
-        const qInquiries = query(collection(db, "inquiries"), orderBy("createdAt", "desc"), limit(20));
-        const unsubInquiries = onSnapshot(qInquiries, (snapshot) => {
-            if (inquiryList) {
-                inquiryList.innerHTML = '';
-                if (snapshot.empty) {
-                    inquiryList.innerHTML = '<tr><td colspan="4">No inquiries yet.</td></tr>';
-                } else {
-                    snapshot.forEach(doc => {
-                        const data = doc.data();
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `
+    // 7. Assign Task Listener
+    const assignTaskForm = document.getElementById('mgr-assign-task-form');
+    if (assignTaskForm) {
+        const newForm = assignTaskForm.cloneNode(true);
+        assignTaskForm.parentNode.replaceChild(newForm, assignTaskForm);
+
+        newForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const title = newForm.querySelector('#task-title').value;
+            const desc = newForm.querySelector('#task-desc').value;
+            const project = newForm.querySelector('#task-project').value;
+            const deadline = newForm.querySelector('#task-deadline').value;
+            const empSelect = newForm.querySelector('#task-emp-select');
+            const empName = empSelect.options[empSelect.selectedIndex].text;
+
+            if (title && empSelect.value && db) {
+                await addDoc(collection(db, "tasks"), {
+                    title: title,
+                    description: desc,
+                    projectId: project,
+                    deadline: deadline,
+                    priority: "Medium",
+                    status: "Pending",
+                    assignedTo: empName,
+                    source: "Manager",
+                    createdAt: Date.now()
+                });
+                showToast(`Task "${title}" assigned to ${empName}.`, "success");
+                newForm.reset();
+            }
+        });
+    }
+
+    // 8. Role Assignment Listener
+    const mgrRoleForm = document.getElementById('mgr-role-form');
+    if (mgrRoleForm) {
+        const newRoleForm = mgrRoleForm.cloneNode(true);
+        mgrRoleForm.parentNode.replaceChild(newRoleForm, mgrRoleForm);
+
+        newRoleForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const empId = newRoleForm.querySelector('#role-emp-select').value;
+            const newRole = newRoleForm.querySelector('#role-input').value;
+
+            if (empId && newRole && db) {
+                try {
+                    const userRef = doc(db, "users", empId);
+                    const userSnap = await getDoc(userRef);
+                    const userName = userSnap.exists() ? (userSnap.data().name || userSnap.data().email) : "Employee";
+
+                    await updateDoc(userRef, { position: newRole });
+
+                    // Notify Admin
+                    await addDoc(collection(db, "notifications"), {
+                        message: `Manager updated ${userName}'s position to: ${newRole}`,
+                        targetRole: 'owner',
+                        createdAt: Date.now()
+                    });
+
+                    // Notify Employee
+                    await addDoc(collection(db, "notifications"), {
+                        message: `Your position has been updated to: ${newRole}`,
+                        targetEmail: userSnap.data().email,
+                        createdAt: Date.now()
+                    });
+
+                    showToast(`Employee position updated to ${newRole}!`, "success");
+                    newRoleForm.reset();
+                } catch (error) {
+                    console.error("Error updating role:", error);
+                    showToast("Failed to update role.", "error");
+                }
+            }
+        });
+    }
+}
+    }
+
+// Manager Assign Task
+// --- 6. Owner Dashboard Logic ---
+function initOwnerDashboard() {
+    // Notifications (Admin/Owner)
+    const qNotif = query(collection(db, "notifications"), where("targetRole", "==", "owner"), orderBy("createdAt", "desc"), limit(10));
+    const unsubNotif = onSnapshot(qNotif, (snapshot) => {
+        const notifList = document.getElementById('owner-notifications');
+        if (notifList) {
+            notifList.innerHTML = '';
+            snapshot.forEach(doc => {
+                const note = doc.data();
+                const li = document.createElement('li');
+                li.textContent = note.message;
+                notifList.appendChild(li);
+            });
+        }
+    });
+    unsubscribeListeners.push(unsubNotif);
+
+    // Inquiries (Updated for Table)
+    const qInquiries = query(collection(db, "inquiries"), orderBy("createdAt", "desc"), limit(20));
+    const unsubInquiries = onSnapshot(qInquiries, (snapshot) => {
+        if (inquiryList) {
+            inquiryList.innerHTML = '';
+            if (snapshot.empty) {
+                inquiryList.innerHTML = '<tr><td colspan="4">No inquiries yet.</td></tr>';
+            } else {
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
                             <td>${data.name}</td>
                             <td>${data.email}</td>
                             <td>${data.message}</td>
                             <td>${data.dateString}</td>
                         `;
-                        inquiryList.appendChild(tr);
-                    });
-                }
+                    inquiryList.appendChild(tr);
+                });
             }
-        });
-        unsubscribeListeners.push(unsubInquiries);
+        }
+    });
+    unsubscribeListeners.push(unsubInquiries);
 
-        // --- User Management Logic (Updated for Employee Directory) ---
-        const userTableBody = document.getElementById('admin-employee-table');
-        const addUserBtn = document.getElementById('admin-add-user-btn');
-        const emailInput = document.getElementById('admin-new-user-email');
-        const roleInput = document.getElementById('admin-new-user-role');
+    // --- User Management Logic (Updated for Employee Directory) ---
+    const userTableBody = document.getElementById('admin-employee-table');
+    const addUserBtn = document.getElementById('admin-add-user-btn');
+    const emailInput = document.getElementById('admin-new-user-email');
+    const roleInput = document.getElementById('admin-new-user-role');
 
-        // Listen for Users
-        const qUsers = query(collection(db, "users"));
-        const unsubUsers = onSnapshot(qUsers, (snapshot) => {
-            const employeeTable = document.getElementById('admin-employee-table');
-            const assignSelect = document.getElementById('owner-task-target');
+    // Listen for Users
+    const qUsers = query(collection(db, "users"));
+    const unsubUsers = onSnapshot(qUsers, (snapshot) => {
+        const employeeTable = document.getElementById('admin-employee-table');
+        const assignSelect = document.getElementById('owner-task-target');
 
-            if (employeeTable) employeeTable.innerHTML = '';
-            if (assignSelect) assignSelect.innerHTML = '<option value="">Select Manager or Employee</option>';
+        if (employeeTable) employeeTable.innerHTML = '';
+        if (assignSelect) assignSelect.innerHTML = '<option value="">Select Manager or Employee</option>';
 
-            snapshot.forEach(doc => {
-                const user = doc.data();
-                const uid = doc.id;
+        snapshot.forEach(doc => {
+            const user = doc.data();
+            const uid = doc.id;
 
-                // Populate Employee Table
-                if (employeeTable) {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
+            // Populate Employee Table
+            if (employeeTable) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
                     <td>${user.name || 'N/A'}</td>
                     <td><span class="tag ${user.role === 'owner' ? 'high' : user.role === 'manager' ? 'medium' : 'low'}">${user.role.toUpperCase()}</span></td>
                     <td>${user.department || 'General'}</td>
@@ -1075,505 +892,474 @@ const unsubPayslips = onSnapshot(qPayslips, (snapshot) => {
                         ${user.email !== currentUser.email ? `<button class="btn-small delete-btn" data-id="${uid}" style="background:#ef4444; color:white;">Remove</button>` : ''}
                     </td>
                 `;
-                    employeeTable.appendChild(tr);
-                }
+                employeeTable.appendChild(tr);
+            }
 
-                // Populate Task Assignment Dropdown
-                if (assignSelect && (user.role === 'manager' || user.role === 'employee')) {
-                    const option = document.createElement('option');
-                    option.value = user.name; // Using name for assignment as per current schema
-                    option.textContent = `${user.name} (${user.role})`;
-                    assignSelect.appendChild(option);
-                }
-            });
+            // Populate Task Assignment Dropdown
+            if (assignSelect && (user.role === 'manager' || user.role === 'employee')) {
+                const option = document.createElement('option');
+                option.value = user.name; // Using name for assignment as per current schema
+                option.textContent = `${user.name} (${user.role})`;
+                assignSelect.appendChild(option);
+            }
+        });
 
-            // Attach Delete Listeners
-            if (employeeTable) {
-                employeeTable.querySelectorAll('.delete-btn').forEach(btn => {
-                    btn.addEventListener('click', async (e) => {
-                        const uid = e.target.getAttribute('data-id');
-                        const userItem = snapshot.docs.find(d => d.id === uid).data();
-                        const userName = userItem.name || userItem.email;
-                        const userRole = userItem.role;
+        // Attach Delete Listeners
+        if (employeeTable) {
+            employeeTable.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const uid = e.target.getAttribute('data-id');
+                    const userItem = snapshot.docs.find(d => d.id === uid).data();
+                    const userName = userItem.name || userItem.email;
+                    const userRole = userItem.role;
 
-                        if (confirm('Are you sure you want to remove this user? This cannot be undone.')) {
-                            try {
-                                await deleteDoc(doc(db, "users", uid));
-                                // Note: This only deletes from Firestore, not Auth.
+                    if (confirm('Are you sure you want to remove this user? This cannot be undone.')) {
+                        try {
+                            await deleteDoc(doc(db, "users", uid));
+                            // Note: This only deletes from Firestore, not Auth.
 
-                                // Notify Managers if an employee is removed
-                                if (userRole === 'employee') {
-                                    await addDoc(collection(db, "notifications"), {
-                                        message: `Admin removed employee: ${userName}`,
-                                        targetRole: 'manager',
-                                        createdAt: Date.now()
-                                    });
-                                }
-                            } catch (err) {
-                                console.error("Error deleting user:", err);
-                                showToast("Failed to delete user.", "error");
+                            // Notify Managers if an employee is removed
+                            if (userRole === 'employee') {
+                                await addDoc(collection(db, "notifications"), {
+                                    message: `Admin removed employee: ${userName}`,
+                                    targetRole: 'manager',
+                                    createdAt: Date.now()
+                                });
                             }
+                        } catch (err) {
+                            console.error("Error deleting user:", err);
+                            showToast("Failed to delete user.", "error");
                         }
+                    }
+                });
+            });
+        }
+    });
+    unsubscribeListeners.push(unsubUsers);
+
+    // Add User
+    // Add User (Moved outside init to prevent duplicates, see below)
+    // We will attach the listener only if it hasn't been attached.
+    // Better pattern: Remove old listener or use a global setup function.
+    // For this codebase, let's use a simple check or cloneNode.
+    if (addUserBtn) {
+        // Clone to remove existing listeners
+        const newBtn = addUserBtn.cloneNode(true);
+        addUserBtn.parentNode.replaceChild(newBtn, addUserBtn);
+
+        newBtn.addEventListener('click', async () => {
+            const name = document.getElementById('admin-new-user-name').value;
+            const email = emailInput.value;
+            const password = document.getElementById('admin-new-user-pass').value;
+            const role = roleInput.value;
+            const dept = document.getElementById('admin-new-user-dept').value;
+
+            if (name && email && password && role && db) {
+                try {
+                    // 1. Create Auth User (using secondary app to avoid logging out current user)
+                    const secondaryApp = initializeApp(firebaseConfig, "Secondary");
+                    const secondaryAuth = getAuth(secondaryApp);
+                    await createUserWithEmailAndPassword(secondaryAuth, email, password);
+                    await signOut(secondaryAuth); // Sign out the new user immediately
+                    await deleteApp(secondaryApp); // Cleanup
+
+                    // 2. Create Firestore Profile
+                    await addDoc(collection(db, "users"), {
+                        name: name,
+                        email: email,
+                        role: role,
+                        department: dept || 'General',
+                        position: role.charAt(0).toUpperCase() + role.slice(1), // Default position
+                        createdAt: Date.now()
                     });
-                });
-            }
-        });
-        unsubscribeListeners.push(unsubUsers);
 
-        // Add User
-        // Add User (Moved outside init to prevent duplicates, see below)
-        // We will attach the listener only if it hasn't been attached.
-        // Better pattern: Remove old listener or use a global setup function.
-        // For this codebase, let's use a simple check or cloneNode.
-        if (addUserBtn) {
-            // Clone to remove existing listeners
-            const newBtn = addUserBtn.cloneNode(true);
-            addUserBtn.parentNode.replaceChild(newBtn, addUserBtn);
-
-            newBtn.addEventListener('click', async () => {
-                const name = document.getElementById('admin-new-user-name').value;
-                const email = emailInput.value;
-                const password = document.getElementById('admin-new-user-pass').value;
-                const role = roleInput.value;
-                const dept = document.getElementById('admin-new-user-dept').value;
-
-                if (name && email && password && role && db) {
-                    try {
-                        // 1. Create Auth User (using secondary app to avoid logging out current user)
-                        const secondaryApp = initializeApp(firebaseConfig, "Secondary");
-                        const secondaryAuth = getAuth(secondaryApp);
-                        await createUserWithEmailAndPassword(secondaryAuth, email, password);
-                        await signOut(secondaryAuth); // Sign out the new user immediately
-                        await deleteApp(secondaryApp); // Cleanup
-
-                        // 2. Create Firestore Profile
-                        await addDoc(collection(db, "users"), {
-                            name: name,
-                            email: email,
-                            role: role,
-                            department: dept || 'General',
-                            position: role.charAt(0).toUpperCase() + role.slice(1), // Default position
-                            createdAt: Date.now()
-                        });
-
-                        // Notify Managers if a new employee is added
-                        if (role === 'employee') {
-                            await addDoc(collection(db, "notifications"), {
-                                message: `Admin added new employee: ${name} (${email})`,
-                                targetRole: 'manager',
-                                createdAt: Date.now()
-                            });
-                        }
-
-                        showToast(`User ${name} added successfully! They can login with the provided password.`, "success");
-                        // Reset form
-                        document.getElementById('admin-new-user-name').value = '';
-                        emailInput.value = '';
-                        document.getElementById('admin-new-user-pass').value = '';
-                        roleInput.value = '';
-                        document.getElementById('admin-new-user-dept').value = '';
-                    } catch (e) {
-                        console.error("Error adding user: ", e);
-                        showToast("Failed to add user: " + e.message, "error");
-                    }
-                } else {
-                    showToast("Please fill in all required fields (Name, Email, Password, Role).", "info");
-                }
-            });
-        }
-
-        // --- Executive Task Assignment ---
-        const ownerTaskForm = document.getElementById('owner-assign-task-form');
-        // Populate Dropdown with Managers and Employees
-        const qAllStaff = query(collection(db, "users"), where("role", "in", ["manager", "employee"]));
-        const unsubAllStaff = onSnapshot(qAllStaff, (snapshot) => {
-            const targetSelect = document.getElementById('owner-task-target');
-            if (targetSelect) {
-                targetSelect.innerHTML = '<option value="">Select Manager or Employee</option>';
-                snapshot.forEach(doc => {
-                    const user = doc.data();
-                    const opt = document.createElement('option');
-                    opt.value = user.name || user.email; // Using Name/Email as identifier for now
-                    opt.textContent = `${user.name || user.email} (${user.role})`;
-                    targetSelect.appendChild(opt);
-                });
-            }
-        });
-        unsubscribeListeners.push(unsubAllStaff);
-
-        if (ownerTaskForm) {
-            // Prevent duplicate listeners
-            const newForm = ownerTaskForm.cloneNode(true);
-            ownerTaskForm.parentNode.replaceChild(newForm, ownerTaskForm);
-
-            newForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const title = document.getElementById('owner-task-title').value;
-                const target = document.getElementById('owner-task-target').value;
-                const desc = document.getElementById('owner-task-desc').value;
-                const project = document.getElementById('owner-task-project').value;
-                const deadline = document.getElementById('owner-task-deadline').value;
-
-                if (title && target && db) {
-                    try {
-                        await addDoc(collection(db, "tasks"), {
-                            title: title,
-                            description: desc,
-                            projectId: project,
-                            deadline: deadline,
-                            priority: "High", // Default high for executive
-                            status: "Pending",
-                            assignedTo: target,
-                            source: "Executive", // Differentiator
-                            createdAt: Date.now()
-                        });
-
-                        // Notify the user
+                    // Notify Managers if a new employee is added
+                    if (role === 'employee') {
                         await addDoc(collection(db, "notifications"), {
-                            message: `Executive assigned you a new task: ${title}`,
-                            targetEmail: target.includes('@') ? target : null, // If value is email, target specific. If name, might miss. Ideally use ID.
-                            // Fallback: we are using name in dropdown. Let's hope name is unique or switch to ID later.
-                            // For now, let's just create a general notification or try to find email.
-                            // Simplified: Just create the task. The user sees it in their list.
+                            message: `Admin added new employee: ${name} (${email})`,
+                            targetRole: 'manager',
                             createdAt: Date.now()
                         });
-
-                        showToast("Task assigned successfully!", "success");
-                        ownerTaskForm.reset();
-                    } catch (err) {
-                        console.error("Error assigning task:", err);
-                        showToast("Failed to assign task.", "error");
                     }
-                }
-            });
-        }
 
-        // --- Global Announcement ---
-        const announceForm = document.getElementById('owner-announcement-form');
-
-        // Display Last Announcement
-        const qLastAnnounce = query(collection(db, "announcements"), orderBy("createdAt", "desc"), limit(1));
-        const unsubLastAnnounce = onSnapshot(qLastAnnounce, (snapshot) => {
-            const lastDiv = document.getElementById('owner-last-announcement');
-            if (lastDiv) {
-                if (snapshot.empty) {
-                    lastDiv.textContent = "No announcements posted yet.";
-                } else {
-                    const data = snapshot.docs[0].data();
-                    const date = new Date(data.createdAt).toLocaleString();
-                    lastDiv.innerHTML = `<strong>Last Posted:</strong> "${data.message}" <br> <small>To: ${data.targetAudience || 'All'} | On: ${date}</small>`;
+                    showToast(`User ${name} added successfully! They can login with the provided password.`, "success");
+                    // Reset form
+                    document.getElementById('admin-new-user-name').value = '';
+                    emailInput.value = '';
+                    document.getElementById('admin-new-user-pass').value = '';
+                    roleInput.value = '';
+                    document.getElementById('admin-new-user-dept').value = '';
+                } catch (e) {
+                    console.error("Error adding user: ", e);
+                    showToast("Failed to add user: " + e.message, "error");
                 }
+            } else {
+                showToast("Please fill in all required fields (Name, Email, Password, Role).", "info");
             }
         });
-        unsubscribeListeners.push(unsubLastAnnounce);
-
-        if (announceForm) {
-            announceForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const msg = document.getElementById('announcement-input').value;
-                const target = document.getElementById('announcement-target').value;
-
-                if (msg && db) {
-                    try {
-                        await addDoc(collection(db, "announcements"), {
-                            message: msg,
-                            targetAudience: target,
-                            createdAt: Date.now(),
-                            createdBy: currentUser.email
-                        });
-                        showToast("Announcement posted!", "success");
-                        document.getElementById('announcement-input').value = '';
-                    } catch (err) {
-                        console.error("Error posting announcement:", err);
-                        showToast("Failed to post announcement.", "error");
-                    }
-                }
-            });
-        }
     }
 
-    // --- 8. Client Dashboard Logic ---
-    function initClientDashboard() {
-        // Listen for Projects
-        const qProjects = query(collection(db, "projects"), where("clientId", "==", currentUser.email));
-        const unsubProjects = onSnapshot(qProjects, (snapshot) => {
-            const projectList = document.getElementById('client-project-list');
-            if (projectList) {
-                projectList.innerHTML = '';
-                if (snapshot.empty) {
-                    projectList.innerHTML = '<p>No active projects.</p>';
-                } else {
-                    snapshot.forEach(doc => {
-                        const proj = doc.data();
-                        const div = document.createElement('div');
-                        div.className = 'status-timeline'; // Reusing style
-                        div.innerHTML = `
+    // --- Executive Task Assignment ---
+    const ownerTaskForm = document.getElementById('owner-assign-task-form');
+    // Populate Dropdown with Managers and Employees
+    const qAllStaff = query(collection(db, "users"), where("role", "in", ["manager", "employee"]));
+    const unsubAllStaff = onSnapshot(qAllStaff, (snapshot) => {
+        const targetSelect = document.getElementById('owner-task-target');
+        if (targetSelect) {
+            targetSelect.innerHTML = '<option value="">Select Manager or Employee</option>';
+            snapshot.forEach(doc => {
+                const user = doc.data();
+                const opt = document.createElement('option');
+                opt.value = user.name || user.email; // Using Name/Email as identifier for now
+                opt.textContent = `${user.name || user.email} (${user.role})`;
+                targetSelect.appendChild(opt);
+            });
+        }
+    });
+    unsubscribeListeners.push(unsubAllStaff);
+
+    if (ownerTaskForm) {
+        // Prevent duplicate listeners
+        const newForm = ownerTaskForm.cloneNode(true);
+        ownerTaskForm.parentNode.replaceChild(newForm, ownerTaskForm);
+
+        newForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const title = document.getElementById('owner-task-title').value;
+            const target = document.getElementById('owner-task-target').value;
+            const desc = document.getElementById('owner-task-desc').value;
+            const project = document.getElementById('owner-task-project').value;
+            const deadline = document.getElementById('owner-task-deadline').value;
+
+            if (title && target && db) {
+                try {
+                    await addDoc(collection(db, "tasks"), {
+                        title: title,
+                        description: desc,
+                        projectId: project,
+                        deadline: deadline,
+                        priority: "High", // Default high for executive
+                        status: "Pending",
+                        assignedTo: target,
+                        source: "Executive", // Differentiator
+                        createdAt: Date.now()
+                    });
+
+                    // Notify the user
+                    await addDoc(collection(db, "notifications"), {
+                        message: `Executive assigned you a new task: ${title}`,
+                        targetEmail: target.includes('@') ? target : null, // If value is email, target specific. If name, might miss. Ideally use ID.
+                        // Fallback: we are using name in dropdown. Let's hope name is unique or switch to ID later.
+                        // For now, let's just create a general notification or try to find email.
+                        // Simplified: Just create the task. The user sees it in their list.
+                        createdAt: Date.now()
+                    });
+
+                    showToast("Task assigned successfully!", "success");
+                    ownerTaskForm.reset();
+                } catch (err) {
+                    console.error("Error assigning task:", err);
+                    showToast("Failed to assign task.", "error");
+                }
+            }
+        });
+    }
+
+    // --- Global Announcement ---
+    const announceForm = document.getElementById('owner-announcement-form');
+
+    // Display Last Announcement
+    const qLastAnnounce = query(collection(db, "announcements"), orderBy("createdAt", "desc"), limit(1));
+    const unsubLastAnnounce = onSnapshot(qLastAnnounce, (snapshot) => {
+        const lastDiv = document.getElementById('owner-last-announcement');
+        if (lastDiv) {
+            if (snapshot.empty) {
+                lastDiv.textContent = "No announcements posted yet.";
+            } else {
+                const data = snapshot.docs[0].data();
+                const date = new Date(data.createdAt).toLocaleString();
+                lastDiv.innerHTML = `<strong>Last Posted:</strong> "${data.message}" <br> <small>To: ${data.targetAudience || 'All'} | On: ${date}</small>`;
+            }
+        }
+    });
+    unsubscribeListeners.push(unsubLastAnnounce);
+
+    if (announceForm) {
+        announceForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const msg = document.getElementById('announcement-input').value;
+            const target = document.getElementById('announcement-target').value;
+
+            if (msg && db) {
+                try {
+                    await addDoc(collection(db, "announcements"), {
+                        message: msg,
+                        targetAudience: target,
+                        createdAt: Date.now(),
+                        createdBy: currentUser.email
+                    });
+                    showToast("Announcement posted!", "success");
+                    document.getElementById('announcement-input').value = '';
+                } catch (err) {
+                    console.error("Error posting announcement:", err);
+                    showToast("Failed to post announcement.", "error");
+                }
+            }
+        });
+    }
+}
+
+// --- 8. Client Dashboard Logic ---
+function initClientDashboard() {
+    // Listen for Projects
+    const qProjects = query(collection(db, "projects"), where("clientId", "==", currentUser.email));
+    const unsubProjects = onSnapshot(qProjects, (snapshot) => {
+        const projectList = document.getElementById('client-project-list');
+        if (projectList) {
+            projectList.innerHTML = '';
+            if (snapshot.empty) {
+                projectList.innerHTML = '<p>No active projects.</p>';
+            } else {
+                snapshot.forEach(doc => {
+                    const proj = doc.data();
+                    const div = document.createElement('div');
+                    div.className = 'status-timeline'; // Reusing style
+                    div.innerHTML = `
                         <h4>${proj.name}</h4>
                         <p>${proj.details}</p>
                         <p><strong>Status:</strong> ${proj.status}</p>
                         <p><small>${proj.startDate} to ${proj.endDate}</small></p>
                     `;
-                        projectList.appendChild(div);
-                    });
-                }
+                    projectList.appendChild(div);
+                });
             }
-        });
-        unsubscribeListeners.push(unsubProjects);
+        }
+    });
+    unsubscribeListeners.push(unsubProjects);
 
-        // Listen for Invoices
-        const qInvoices = query(collection(db, "invoices"), where("clientId", "==", currentUser.email));
-        const unsubInvoices = onSnapshot(qInvoices, (snapshot) => {
-            const invList = document.getElementById('client-invoice-list');
-            if (invList) {
-                invList.innerHTML = '';
-                if (snapshot.empty) {
-                    invList.innerHTML = '<li>No invoices found.</li>';
-                } else {
-                    snapshot.forEach(doc => {
-                        const inv = doc.data();
-                        const li = document.createElement('li');
-                        li.innerHTML = `
+    // Listen for Invoices
+    const qInvoices = query(collection(db, "invoices"), where("clientId", "==", currentUser.email));
+    const unsubInvoices = onSnapshot(qInvoices, (snapshot) => {
+        const invList = document.getElementById('client-invoice-list');
+        if (invList) {
+            invList.innerHTML = '';
+            if (snapshot.empty) {
+                invList.innerHTML = '<li>No invoices found.</li>';
+            } else {
+                snapshot.forEach(doc => {
+                    const inv = doc.data();
+                    const li = document.createElement('li');
+                    li.innerHTML = `
                         🧾 <strong>${inv.details}</strong> - $${inv.amount} 
                         <span class="tag ${inv.status === 'Paid' ? 'done' : 'high'}">${inv.status}</span>
                         <br><small>Due: ${inv.dueDate}</small>
                     `;
-                        invList.appendChild(li);
-                    });
-                }
-            }
-        });
-        unsubscribeListeners.push(unsubInvoices);
-    }
-
-    // --- 9. AI Chatbot Logic & Inquiry Form ---
-    // --- 9. AI Chatbot Logic & Multi-Step Form ---
-    const chatInput = document.getElementById('ai-chat-input');
-    const chatSend = document.getElementById('ai-chat-send');
-    const chatMessages = document.getElementById('ai-chat-messages');
-
-    // Multi-Step Form Logic
-    const multiStepForm = document.getElementById('multi-step-form');
-    if (multiStepForm) {
-        const steps = multiStepForm.querySelectorAll('.quiz-step');
-        const progressFill = document.getElementById('quiz-progress');
-        let currentStep = 0;
-
-        const updateStep = () => {
-            steps.forEach((step, index) => {
-                step.classList.toggle('active', index === currentStep);
-            });
-            // Update Progress Bar (Steps are 1-6)
-            const progress = ((currentStep + 1) / steps.length) * 100;
-            if (progressFill) progressFill.style.width = `${progress}%`;
-        };
-
-        // Validation Patterns
-        const patterns = {
-            businessName: { regex: /^[a-zA-Z0-9\s\.\-\&]+$/, msg: "Business Name can only contain letters, numbers, spaces, and . - &" },
-            industry: { regex: /^[a-zA-Z\s]+$/, msg: "Industry can only contain letters and spaces." },
-            size: { regex: /^[0-9\-\+]+$/, msg: "Size must be numbers (e.g., 10, 10-50, 100+)." },
-            location: { regex: /^[a-zA-Z0-9\s\,\.\-]+$/, msg: "Location contains invalid characters." },
-            website: { regex: /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/, msg: "Please enter a valid website URL." },
-            contactEmail: { regex: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, msg: "Please enter a valid email address." },
-            contactPerson: { regex: /^[a-zA-Z\s\.]+$/, msg: "Contact Name can only contain letters." },
-            budget: { regex: /^[0-9\$\,\.\-\s]+$/, msg: "Budget should be numeric (e.g. $1000, 5000-10000)." },
-            whatsapp: { regex: /^\+?[0-9\s\-]{7,15}$/, msg: "Please enter a valid phone number (e.g. +1234567890)." }
-        };
-
-        // Next Buttons
-        multiStepForm.querySelectorAll('.btn-next').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const currentInputs = steps[currentStep].querySelectorAll('input, textarea');
-                let valid = true;
-
-                currentInputs.forEach(input => {
-                    const name = input.name;
-                    const value = input.value.trim();
-                    const isRequired = input.hasAttribute('required');
-                    const errorMsgEl = input.nextElementSibling; // Get the .error-message div
-
-                    // Reset style and error message
-                    input.classList.remove('error');
-                    input.style.borderColor = '#cbd5e1';
-                    if (errorMsgEl && errorMsgEl.classList.contains('error-message')) {
-                        errorMsgEl.textContent = '';
-                        errorMsgEl.classList.remove('visible');
-                    }
-
-                    let error = null;
-
-                    // 1. Check Required
-                    if (isRequired && !value) {
-                        error = "This field is required.";
-                    }
-                    // 2. Check Patterns (if value exists)
-                    else if (value && patterns[name]) {
-                        if (!patterns[name].regex.test(value)) {
-                            error = patterns[name].msg;
-                        }
-                    }
-
-                    // Display Error
-                    if (error) {
-                        valid = false;
-                        input.classList.add('error');
-                        input.style.borderColor = '#ef4444';
-                        if (errorMsgEl && errorMsgEl.classList.contains('error-message')) {
-                            errorMsgEl.textContent = error;
-                            errorMsgEl.classList.add('visible');
-                        }
-                    }
+                    invList.appendChild(li);
                 });
+            }
+        }
+    });
+    unsubscribeListeners.push(unsubInvoices);
+}
 
-                if (valid) {
-                    if (currentStep < steps.length - 1) {
-                        currentStep++;
-                        updateStep();
+// --- 9. AI Chatbot Logic & Inquiry Form ---
+// --- 9. AI Chatbot Logic & Multi-Step Form ---
+const chatInput = document.getElementById('ai-chat-input');
+const chatSend = document.getElementById('ai-chat-send');
+const chatMessages = document.getElementById('ai-chat-messages');
+
+// Multi-Step Form Logic
+const multiStepForm = document.getElementById('multi-step-form');
+if (multiStepForm) {
+    const steps = multiStepForm.querySelectorAll('.quiz-step');
+    const progressFill = document.getElementById('quiz-progress');
+    let currentStep = 0;
+
+    const updateStep = () => {
+        steps.forEach((step, index) => {
+            step.classList.toggle('active', index === currentStep);
+        });
+        // Update Progress Bar (Steps are 1-6)
+        const progress = ((currentStep + 1) / steps.length) * 100;
+        if (progressFill) progressFill.style.width = `${progress}%`;
+    };
+
+    // Validation Patterns
+    const patterns = {
+        businessName: { regex: /^[a-zA-Z0-9\s\.\-\&]+$/, msg: "Business Name can only contain letters, numbers, spaces, and . - &" },
+        industry: { regex: /^[a-zA-Z\s]+$/, msg: "Industry can only contain letters and spaces." },
+        size: { regex: /^[0-9\-\+]+$/, msg: "Size must be numbers (e.g., 10, 10-50, 100+)." },
+        location: { regex: /^[a-zA-Z0-9\s\,\.\-]+$/, msg: "Location contains invalid characters." },
+        website: { regex: /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/, msg: "Please enter a valid website URL." },
+        contactEmail: { regex: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, msg: "Please enter a valid email address." },
+        contactPerson: { regex: /^[a-zA-Z\s\.]+$/, msg: "Contact Name can only contain letters." },
+        budget: { regex: /^[0-9\$\,\.\-\s]+$/, msg: "Budget should be numeric (e.g. $1000, 5000-10000)." },
+        whatsapp: { regex: /^\+?[0-9\s\-]{7,15}$/, msg: "Please enter a valid phone number (e.g. +1234567890)." }
+    };
+
+    // Next Buttons
+    multiStepForm.querySelectorAll('.btn-next').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const currentInputs = steps[currentStep].querySelectorAll('input, textarea');
+            let valid = true;
+
+            currentInputs.forEach(input => {
+                const name = input.name;
+                const value = input.value.trim();
+                const isRequired = input.hasAttribute('required');
+                const errorMsgEl = input.nextElementSibling; // Get the .error-message div
+
+                // Reset style and error message
+                input.classList.remove('error');
+                input.style.borderColor = '#cbd5e1';
+                if (errorMsgEl && errorMsgEl.classList.contains('error-message')) {
+                    errorMsgEl.textContent = '';
+                    errorMsgEl.classList.remove('visible');
+                }
+
+                let error = null;
+
+                // 1. Check Required
+                if (isRequired && !value) {
+                    error = "This field is required.";
+                }
+                // 2. Check Patterns (if value exists)
+                else if (value && patterns[name]) {
+                    if (!patterns[name].regex.test(value)) {
+                        error = patterns[name].msg;
+                    }
+                }
+
+                // Display Error
+                if (error) {
+                    valid = false;
+                    input.classList.add('error');
+                    input.style.borderColor = '#ef4444';
+                    if (errorMsgEl && errorMsgEl.classList.contains('error-message')) {
+                        errorMsgEl.textContent = error;
+                        errorMsgEl.classList.add('visible');
                     }
                 }
             });
-        });
 
-        // Prev Buttons
-        multiStepForm.querySelectorAll('.btn-prev').forEach(btn => {
-            btn.addEventListener('click', () => {
-                if (currentStep > 0) {
-                    currentStep--;
+            if (valid) {
+                if (currentStep < steps.length - 1) {
+                    currentStep++;
                     updateStep();
                 }
-            });
+            }
         });
+    });
 
-        // Prevent Accidental Reload
-        window.addEventListener('beforeunload', (e) => {
-            // Check if user has started the form (step > 0 or any input filled)
-            // Simple check: if currentStep > 0
+    // Prev Buttons
+    multiStepForm.querySelectorAll('.btn-prev').forEach(btn => {
+        btn.addEventListener('click', () => {
             if (currentStep > 0) {
-                e.preventDefault();
-                e.returnValue = ''; // Chrome requires returnValue to be set
+                currentStep--;
+                updateStep();
             }
         });
+    });
 
-        // Form Submission
-        multiStepForm.addEventListener('submit', async (e) => {
+    // Prevent Accidental Reload
+    window.addEventListener('beforeunload', (e) => {
+        // Check if user has started the form (step > 0 or any input filled)
+        // Simple check: if currentStep > 0
+        if (currentStep > 0) {
             e.preventDefault();
+            e.returnValue = ''; // Chrome requires returnValue to be set
+        }
+    });
 
-            // Collect all data
-            const formData = new FormData(multiStepForm);
-            const data = {};
-            formData.forEach((value, key) => {
-                // Handle checkboxes (arrays)
-                if (data[key]) {
-                    if (!Array.isArray(data[key])) {
-                        data[key] = [data[key]];
-                    }
-                    data[key].push(value);
-                } else {
-                    data[key] = value;
-                }
-            });
+    // Form Submission
+    multiStepForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
 
-            if (db) {
-                try {
-                    await addDoc(collection(db, "inquiries"), {
-                        ...data,
-                        createdAt: Date.now(),
-                        dateString: new Date().toLocaleDateString(),
-                        status: 'New'
-                    });
-                    showToast("Thank you! Your comprehensive inquiry has been received. We will analyze your needs and contact you shortly.", "success");
-                    multiStepForm.reset();
-                    currentStep = 0;
-                    updateStep();
-                } catch (error) {
-                    console.error("Error sending inquiry:", error);
-                    showToast("There was an error sending your message. Please try again.", "error");
+        // Collect all data
+        const formData = new FormData(multiStepForm);
+        const data = {};
+        formData.forEach((value, key) => {
+            // Handle checkboxes (arrays)
+            if (data[key]) {
+                if (!Array.isArray(data[key])) {
+                    data[key] = [data[key]];
                 }
+                data[key].push(value);
+            } else {
+                data[key] = value;
             }
         });
-    }
 
-    // --- 10. AI Chatbot Booking Logic ---
-    let chatState = 'date'; // date -> time -> phone -> done
-    let bookingData = {};
+        if (db) {
+            try {
+                await addDoc(collection(db, "inquiries"), {
+                    ...data,
+                    createdAt: Date.now(),
+                    dateString: new Date().toLocaleDateString(),
+                    status: 'New'
+                });
+                showToast("Thank you! Your comprehensive inquiry has been received. We will analyze your needs and contact you shortly.", "success");
+                multiStepForm.reset();
+                currentStep = 0;
+                updateStep();
+            } catch (error) {
+                console.error("Error sending inquiry:", error);
+                showToast("There was an error sending your message. Please try again.", "error");
+            }
+        }
+    });
+}
 
-    if (chatSend && chatInput) {
-        const addMessage = (text, sender) => {
-            const div = document.createElement('div');
-            div.className = sender === 'ai' ? 'ai-msg' : 'user-msg';
-            div.textContent = text;
-            chatMessages.appendChild(div);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        };
+// --- 10. AI Chatbot Booking Logic ---
+let chatState = 'date'; // date -> time -> phone -> done
+let bookingData = {};
 
-        chatSend.addEventListener('click', async () => {
-            const text = chatInput.value.trim();
-            if (!text) return;
+if (chatSend && chatInput) {
+    const addMessage = (text, sender) => {
+        const div = document.createElement('div');
+        div.className = sender === 'ai' ? 'ai-msg' : 'user-msg';
+        div.textContent = text;
+        chatMessages.appendChild(div);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    };
 
-            // User Message
-            addMessage(text, 'user');
-            chatInput.value = '';
+    chatSend.addEventListener('click', async () => {
+        const text = chatInput.value.trim();
+        if (!text) return;
 
-            // AI Logic with Delay
-            setTimeout(async () => {
-                let response = "";
-                let valid = false;
+        // User Message
+        addMessage(text, 'user');
+        chatInput.value = '';
 
-                if (chatState === 'date') {
-                    // Validate Date (YYYY-MM-DD)
-                    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-                    if (dateRegex.test(text)) {
-                        const inputDate = new Date(text);
-                        const today = new Date();
-                        today.setHours(0, 0, 0, 0); // Reset time for accurate comparison
+        // AI Logic with Delay
+        setTimeout(async () => {
+            let response = "";
+            let valid = false;
 
-                        if (isNaN(inputDate.getTime())) {
-                            response = "That doesn't look like a valid date. Please use YYYY-MM-DD.";
-                        } else if (inputDate < today) {
-                            response = "You cannot book a consultation in the past. Please enter a future date.";
-                        } else {
-                            bookingData.date = text;
-                            response = "Great. Please select a time slot:";
-                            chatState = 'time';
-                            valid = true;
+            if (chatState === 'date') {
+                // Validate Date (YYYY-MM-DD)
+                const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+                if (dateRegex.test(text)) {
+                    const inputDate = new Date(text);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0); // Reset time for accurate comparison
 
-                            // Add Time Options
-                            setTimeout(() => {
-                                const optionsDiv = document.createElement('div');
-                                optionsDiv.className = 'chat-options';
-                                const slots = ["10 AM - 12 PM", "12 PM - 2 PM", "2 PM - 4 PM", "4 PM - 6 PM"];
-                                slots.forEach(slot => {
-                                    const btn = document.createElement('button');
-                                    btn.className = 'chat-option-btn';
-                                    btn.textContent = slot;
-                                    btn.onclick = () => {
-                                        chatInput.value = slot;
-                                        chatSend.click();
-                                    };
-                                    optionsDiv.appendChild(btn);
-                                });
-                                chatMessages.appendChild(optionsDiv);
-                                chatMessages.scrollTop = chatMessages.scrollHeight;
-                            }, 700);
-                        }
+                    if (isNaN(inputDate.getTime())) {
+                        response = "That doesn't look like a valid date. Please use YYYY-MM-DD.";
+                    } else if (inputDate < today) {
+                        response = "You cannot book a consultation in the past. Please enter a future date.";
                     } else {
-                        response = "Please enter a valid date in YYYY-MM-DD format (e.g., 2024-12-01).";
-                    }
-                } else if (chatState === 'time') {
-                    // Validate Time Slot Selection
-                    const validSlots = ["10 AM - 12 PM", "12 PM - 2 PM", "2 PM - 4 PM", "4 PM - 6 PM"];
-                    if (validSlots.includes(text)) {
-                        bookingData.time = text;
-                        response = "Got it. Now, please enter your Country Code (e.g., +1, +44, +91).";
-                        chatState = 'country_code';
+                        bookingData.date = text;
+                        response = "Great. Please select a time slot:";
+                        chatState = 'time';
                         valid = true;
-                    } else {
-                        response = "Please select one of the available time slots.";
-                        // Re-show options
+
+                        // Add Time Options
                         setTimeout(() => {
                             const optionsDiv = document.createElement('div');
                             optionsDiv.className = 'chat-options';
-                            validSlots.forEach(slot => {
+                            const slots = ["10 AM - 12 PM", "12 PM - 2 PM", "2 PM - 4 PM", "4 PM - 6 PM"];
+                            slots.forEach(slot => {
                                 const btn = document.createElement('button');
                                 btn.className = 'chat-option-btn';
                                 btn.textContent = slot;
@@ -1587,144 +1373,175 @@ const unsubPayslips = onSnapshot(qPayslips, (snapshot) => {
                             chatMessages.scrollTop = chatMessages.scrollHeight;
                         }, 700);
                     }
-                } else if (chatState === 'country_code') {
-                    // Validate Country Code
-                    const ccRegex = /^\+\d{1,4}$/;
-                    if (ccRegex.test(text)) {
-                        bookingData.countryCode = text;
-                        response = "Thanks. Now please enter your Mobile Number.";
-                        chatState = 'mobile';
-                        valid = true;
-                    } else {
-                        response = "Please enter a valid Country Code starting with + (e.g., +1).";
-                    }
-                } else if (chatState === 'mobile') {
-                    // Validate Mobile Number
-                    const mobileRegex = /^\d{7,15}$/;
-                    if (mobileRegex.test(text.replace(/[\s-]/g, ''))) {
-                        bookingData.mobile = text;
-                        response = "Great. Finally, please enter your Email Address.";
-                        chatState = 'email';
-                        valid = true;
-                    } else {
-                        response = "Please enter a valid Mobile Number (digits only).";
-                    }
-                } else if (chatState === 'email') {
-                    // Validate Email
-                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                    if (emailRegex.test(text)) {
-                        bookingData.email = text;
-                        response = "Perfect! Your call has been scheduled. We will confirm shortly via email.";
-                        chatState = 'done';
-                        valid = true;
-
-                        // Save Booking to Firestore
-                        if (db) {
-                            try {
-                                await addDoc(collection(db, "bookings"), {
-                                    ...bookingData,
-                                    createdAt: Date.now(),
-                                    status: 'Pending'
-                                });
-                            } catch (e) {
-                                console.error("Error saving booking:", e);
-                                response += " (System note: Error saving booking)";
-                            }
-                        }
-                    } else {
-                        response = "Please enter a valid Email Address.";
-                    }
-                } else if (chatState === 'done') {
-                    response = "You are all set! Is there anything else?";
+                } else {
+                    response = "Please enter a valid date in YYYY-MM-DD format (e.g., 2024-12-01).";
                 }
+            } else if (chatState === 'time') {
+                // Validate Time Slot Selection
+                const validSlots = ["10 AM - 12 PM", "12 PM - 2 PM", "2 PM - 4 PM", "4 PM - 6 PM"];
+                if (validSlots.includes(text)) {
+                    bookingData.time = text;
+                    response = "Got it. Now, please enter your Country Code (e.g., +1, +44, +91).";
+                    chatState = 'country_code';
+                    valid = true;
+                } else {
+                    response = "Please select one of the available time slots.";
+                    // Re-show options
+                    setTimeout(() => {
+                        const optionsDiv = document.createElement('div');
+                        optionsDiv.className = 'chat-options';
+                        validSlots.forEach(slot => {
+                            const btn = document.createElement('button');
+                            btn.className = 'chat-option-btn';
+                            btn.textContent = slot;
+                            btn.onclick = () => {
+                                chatInput.value = slot;
+                                chatSend.click();
+                            };
+                            optionsDiv.appendChild(btn);
+                        });
+                        chatMessages.appendChild(optionsDiv);
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                    }, 700);
+                }
+            } else if (chatState === 'country_code') {
+                // Validate Country Code
+                const ccRegex = /^\+\d{1,4}$/;
+                if (ccRegex.test(text)) {
+                    bookingData.countryCode = text;
+                    response = "Thanks. Now please enter your Mobile Number.";
+                    chatState = 'mobile';
+                    valid = true;
+                } else {
+                    response = "Please enter a valid Country Code starting with + (e.g., +1).";
+                }
+            } else if (chatState === 'mobile') {
+                // Validate Mobile Number
+                const mobileRegex = /^\d{7,15}$/;
+                if (mobileRegex.test(text.replace(/[\s-]/g, ''))) {
+                    bookingData.mobile = text;
+                    response = "Great. Finally, please enter your Email Address.";
+                    chatState = 'email';
+                    valid = true;
+                } else {
+                    response = "Please enter a valid Mobile Number (digits only).";
+                }
+            } else if (chatState === 'email') {
+                // Validate Email
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (emailRegex.test(text)) {
+                    bookingData.email = text;
+                    response = "Perfect! Your call has been scheduled. We will confirm shortly via email.";
+                    chatState = 'done';
+                    valid = true;
 
-                addMessage(response, 'ai');
-            }, 600);
-        });
-    }
-
-    // --- 11. Toast Notification Logic ---
-    function showToast(message, type = 'info') {
-        const container = document.getElementById('toast-container');
-        if (!container) return;
-
-        const toast = document.createElement('div');
-        toast.className = `toast ${type}`;
-        toast.textContent = message;
-
-        container.appendChild(toast);
-
-        // Auto remove
-        setTimeout(() => {
-            toast.style.animation = 'fadeOut 0.3s ease-out forwards';
-            toast.addEventListener('animationend', () => {
-                toast.remove();
-            });
-        }, 3000);
-    }
-
-    // --- 12. Logout Logic Update ---
-    if (navBtns.logout) {
-        navBtns.logout.addEventListener('click', async () => {
-            try {
-                await signOut(auth);
-                currentUser = null;
-
-                // Unsubscribe from all listeners
-                unsubscribeListeners.forEach(unsub => unsub());
-                unsubscribeListeners = [];
-
-                // Clear login form inputs
-                const loginEmail = document.getElementById('login-email');
-                const loginPass = document.getElementById('login-password');
-                if (loginEmail) loginEmail.value = '';
-                if (loginPass) loginPass.value = '';
-
-                navBtns.login.classList.remove('hidden');
-                navBtns.logout.classList.add('hidden');
-
-                // Redirect to LOGIN page
-                switchView('login');
-
-                showToast("Logged out successfully.", "success");
-            } catch (error) {
-                console.error("Logout error:", error);
-                showToast("Error logging out.", "error");
+                    // Save Booking to Firestore
+                    if (db) {
+                        try {
+                            await addDoc(collection(db, "bookings"), {
+                                ...bookingData,
+                                createdAt: Date.now(),
+                                status: 'Pending'
+                            });
+                        } catch (e) {
+                            console.error("Error saving booking:", e);
+                            response += " (System note: Error saving booking)";
+                        }
+                    }
+                } else {
+                    response = "Please enter a valid Email Address.";
+                }
+            } else if (chatState === 'done') {
+                response = "You are all set! Is there anything else?";
             }
+
+            addMessage(response, 'ai');
+        }, 600);
+    });
+}
+
+// --- 11. Toast Notification Logic ---
+function showToast(message, type = 'info') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+
+    container.appendChild(toast);
+
+    // Auto remove
+    setTimeout(() => {
+        toast.style.animation = 'fadeOut 0.3s ease-out forwards';
+        toast.addEventListener('animationend', () => {
+            toast.remove();
         });
-    }
+    }, 3000);
+}
 
-    // --- 13. Task Management Helpers ---
-    async function toggleTaskStatus(taskId, currentStatus) {
-        const newStatus = currentStatus === 'Completed' ? 'Pending' : 'Completed';
-        const updateData = { status: newStatus };
-        if (newStatus === 'Completed') {
-            updateData.completedAt = Date.now();
-        } else {
-            updateData.completedAt = null;
-        }
-
+// --- 12. Logout Logic Update ---
+if (navBtns.logout) {
+    navBtns.logout.addEventListener('click', async () => {
         try {
-            await updateDoc(doc(db, "tasks", taskId), updateData);
-            showToast(`Task marked as ${newStatus}`, "success");
-        } catch (e) {
-            console.error("Error updating task:", e);
-            showToast("Failed to update task.", "error");
+            await signOut(auth);
+            currentUser = null;
+
+            // Unsubscribe from all listeners
+            unsubscribeListeners.forEach(unsub => unsub());
+            unsubscribeListeners = [];
+
+            // Clear login form inputs
+            const loginEmail = document.getElementById('login-email');
+            const loginPass = document.getElementById('login-password');
+            if (loginEmail) loginEmail.value = '';
+            if (loginPass) loginPass.value = '';
+
+            navBtns.login.classList.remove('hidden');
+            navBtns.logout.classList.add('hidden');
+
+            // Redirect to LOGIN page
+            switchView('login');
+
+            showToast("Logged out successfully.", "success");
+        } catch (error) {
+            console.error("Logout error:", error);
+            showToast("Error logging out.", "error");
         }
+    });
+}
+
+// --- 13. Task Management Helpers ---
+async function toggleTaskStatus(taskId, currentStatus) {
+    const newStatus = currentStatus === 'Completed' ? 'Pending' : 'Completed';
+    const updateData = { status: newStatus };
+    if (newStatus === 'Completed') {
+        updateData.completedAt = Date.now();
+    } else {
+        updateData.completedAt = null;
     }
 
-    if (chatSend) {
-        chatSend.addEventListener('click', () => {
-            const text = chatInput.value;
-            if (!text) return;
-
-            addMessage(text, 'user');
-            chatInput.value = '';
-
-            setTimeout(() => {
-                addMessage("Great! I've tentatively booked that slot for you. One of our experts will call you then.", 'ai');
-            }, 1000);
-        });
+    try {
+        await updateDoc(doc(db, "tasks", taskId), updateData);
+        showToast(`Task marked as ${newStatus}`, "success");
+    } catch (e) {
+        console.error("Error updating task:", e);
+        showToast("Failed to update task.", "error");
     }
-    // Start database seeding in the background
-    seedDatabase().catch(console.error);
+}
+
+if (chatSend) {
+    chatSend.addEventListener('click', () => {
+        const text = chatInput.value;
+        if (!text) return;
+
+        addMessage(text, 'user');
+        chatInput.value = '';
+
+        setTimeout(() => {
+            addMessage("Great! I've tentatively booked that slot for you. One of our experts will call you then.", 'ai');
+        }, 1000);
+    });
+}
+// Start database seeding in the background
+seedDatabase().catch(console.error);
