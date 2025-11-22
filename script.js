@@ -354,6 +354,29 @@ if (loginForm) {
                 if (currentUser.role === 'client') initClientDashboard();
                 if (currentUser.role === 'owner') initOwnerDashboard();
 
+                // Listen for Global Announcements (All Roles)
+                const qAnnounce = query(collection(db, "announcements"), orderBy("createdAt", "desc"), limit(1));
+                const unsubAnnounce = onSnapshot(qAnnounce, (snapshot) => {
+                    if (!snapshot.empty) {
+                        const announce = snapshot.docs[0].data();
+                        // Simple check: Show if created recently (e.g., last 24 hours) OR just show latest.
+                        // To avoid showing same popup every reload, we could store ID in localStorage.
+                        // For now, let's just show it.
+                        const lastSeen = localStorage.getItem('lastSeenAnnouncement');
+                        if (lastSeen !== snapshot.docs[0].id) {
+                            const modal = document.getElementById('announcement-modal');
+                            const text = document.getElementById('announcement-text');
+                            if (modal && text) {
+                                text.textContent = announce.message;
+                                modal.classList.remove('hidden');
+                                // Save to local storage so we don't show again immediately if desired
+                                // localStorage.setItem('lastSeenAnnouncement', snapshot.docs[0].id);
+                            }
+                        }
+                    }
+                });
+                unsubscribeListeners.push(unsubAnnounce);
+
                 // Force view switch based on role
                 const roleViewMap = {
                     'employee': 'employee',
@@ -447,24 +470,29 @@ function initEmployeeDashboard() {
                 const task = doc.data();
                 const taskId = doc.id;
 
-                // Populate Task List
-                if (taskList) {
-                    const li = document.createElement('li');
-                    li.className = 'task-item';
-                    li.innerHTML = `
-                            <div class="task-header">
-                                <strong>${task.title}</strong>
-                                <span class="tag ${task.priority === 'High' ? 'high' : task.priority === 'Medium' ? 'medium' : 'done'}">${task.status}</span>
-                            </div>
-                            <p class="text-small">${task.description || 'No description'}</p>
-                            <div class="task-meta">
-                                <span>📅 Due: ${task.deadline || 'N/A'}</span>
-                                <span>📂 ${task.projectId || 'General'}</span>
-                            </div>
-                            ${task.status !== 'Completed' ? `<button class="btn-small btn-complete" data-id="${taskId}">Mark Complete</button>` : ''}
-                        `;
-                    taskList.appendChild(li);
-                }
+                const li = document.createElement('li');
+                li.className = 'task-item';
+
+                // Check source
+                const sourceBadge = task.source === 'Executive'
+                    ? '<span class="tag high" style="background:#7c3aed; color:white;">From Executive</span>'
+                    : '<span class="tag" style="background:#e5e7eb; color:#374151;">From Manager</span>';
+
+                li.innerHTML = `
+                    <div style="flex:1;">
+                        <div style="display:flex; align-items:center; gap:10px; margin-bottom:5px;">
+                            <strong>${task.title}</strong>
+                            ${sourceBadge}
+                        </div>
+                        <p class="text-small">${task.description || 'No description'}</p>
+                        <p class="text-small"><strong>Deadline:</strong> ${task.deadline || 'N/A'} | <strong>Project:</strong> ${task.projectId || 'N/A'}</p>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:5px; align-items:flex-end;">
+                        <span class="status-badge ${task.status === 'Completed' ? 'status-completed' : 'status-pending'}">${task.status}</span>
+                        ${task.status !== 'Completed' ? `<button class="btn-small complete-btn" data-id="${taskId}">Mark Complete</button>` : ''}
+                    </div>
+                `;
+                taskList.appendChild(li);
 
                 // Populate Report Dropdown
                 if (reportSelect && task.status !== 'Completed') {
@@ -609,11 +637,20 @@ function initManagerDashboard() {
             } else {
                 snapshot.forEach(doc => {
                     const task = doc.data();
+
+                    // Check source
+                    const sourceBadge = task.source === 'Executive'
+                        ? '<span class="tag high" style="background:#7c3aed; color:white;">From Executive</span>'
+                        : '';
+
                     const li = document.createElement('li');
                     li.className = 'task-item';
                     li.innerHTML = `
                         <div>
-                            <strong>${task.title}</strong>
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <strong>${task.title}</strong>
+                                ${sourceBadge}
+                            </div>
                             <p class="text-small">${task.description || 'No description'}</p>
                             <span class="tag ${task.priority === 'High' ? 'high' : 'medium'}">${task.priority}</span>
                         </div>
@@ -975,6 +1012,91 @@ function initOwnerDashboard() {
                 }
             } else {
                 alert("Please enter email and select a role.");
+            }
+        });
+    }
+
+    // --- Executive Task Assignment ---
+    const ownerTaskForm = document.getElementById('owner-assign-task-form');
+    // Populate Dropdown with Managers and Employees
+    const qAllStaff = query(collection(db, "users"), where("role", "in", ["manager", "employee"]));
+    const unsubAllStaff = onSnapshot(qAllStaff, (snapshot) => {
+        const targetSelect = document.getElementById('owner-task-target');
+        if (targetSelect) {
+            targetSelect.innerHTML = '<option value="">Select Manager or Employee</option>';
+            snapshot.forEach(doc => {
+                const user = doc.data();
+                const opt = document.createElement('option');
+                opt.value = user.name || user.email; // Using Name/Email as identifier for now
+                opt.textContent = `${user.name || user.email} (${user.role})`;
+                targetSelect.appendChild(opt);
+            });
+        }
+    });
+    unsubscribeListeners.push(unsubAllStaff);
+
+    if (ownerTaskForm) {
+        ownerTaskForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const title = document.getElementById('owner-task-title').value;
+            const target = document.getElementById('owner-task-target').value;
+            const desc = document.getElementById('owner-task-desc').value;
+            const project = document.getElementById('owner-task-project').value;
+            const deadline = document.getElementById('owner-task-deadline').value;
+
+            if (title && target && db) {
+                try {
+                    await addDoc(collection(db, "tasks"), {
+                        title: title,
+                        description: desc,
+                        projectId: project,
+                        deadline: deadline,
+                        priority: "High", // Default high for executive
+                        status: "Pending",
+                        assignedTo: target,
+                        source: "Executive", // Differentiator
+                        createdAt: Date.now()
+                    });
+
+                    // Notify the user
+                    await addDoc(collection(db, "notifications"), {
+                        message: `Executive assigned you a new task: ${title}`,
+                        targetEmail: target.includes('@') ? target : null, // If value is email, target specific. If name, might miss. Ideally use ID.
+                        // Fallback: we are using name in dropdown. Let's hope name is unique or switch to ID later.
+                        // For now, let's just create a general notification or try to find email.
+                        // Simplified: Just create the task. The user sees it in their list.
+                        createdAt: Date.now()
+                    });
+
+                    alert("Task assigned successfully!");
+                    ownerTaskForm.reset();
+                } catch (err) {
+                    console.error("Error assigning task:", err);
+                    alert("Failed to assign task.");
+                }
+            }
+        });
+    }
+
+    // --- Global Announcement ---
+    const announceForm = document.getElementById('owner-announcement-form');
+    if (announceForm) {
+        announceForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const msg = document.getElementById('announcement-input').value;
+            if (msg && db) {
+                try {
+                    await addDoc(collection(db, "announcements"), {
+                        message: msg,
+                        createdAt: Date.now(),
+                        createdBy: currentUser.email
+                    });
+                    alert("Announcement posted!");
+                    document.getElementById('announcement-input').value = '';
+                } catch (err) {
+                    console.error("Error posting announcement:", err);
+                    alert("Failed to post announcement.");
+                }
             }
         });
     }

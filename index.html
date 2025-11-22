@@ -393,24 +393,55 @@
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Website Inquiries (New) -->
-                <div class="card full-width">
-                    <h3>Recent Website Inquiries</h3>
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Message</th>
-                                <th>Date</th>
-                            </tr>
-                        </thead>
-                        <tbody id="owner-inquiries-list">
-                            <!-- Inquiries injected via JS -->
-                        </tbody>
-                    </table>
-                </div>
+            <!-- Executive Task Assignment (New) -->
+            <div class="card full-width">
+                <h3>Assign Task (Executive)</h3>
+                <form id="owner-assign-task-form">
+                    <div class="form-row">
+                        <input type="text" id="owner-task-title" placeholder="Task Title" required>
+                        <select id="owner-task-target" required>
+                            <option value="">Select Manager or Employee</option>
+                            <!-- Populated via JS -->
+                        </select>
+                    </div>
+                    <textarea id="owner-task-desc" placeholder="Task Description" rows="2"></textarea>
+                    <div class="form-row">
+                        <input type="text" id="owner-task-project" placeholder="Project ID/Name" required>
+                        <input type="date" id="owner-task-deadline" required>
+                    </div>
+                    <button type="submit" class="btn-primary">Assign Task</button>
+                </form>
+            </div>
+
+            <!-- Global Announcement (New) -->
+            <div class="card full-width">
+                <h3>📢 Global Announcement</h3>
+                <p class="text-small">Send a popup greeting/announcement to all users.</p>
+                <form id="owner-announcement-form" style="display:flex; gap:10px;">
+                    <input type="text" id="announcement-input" placeholder="Enter message..." style="flex:1;" required>
+                    <button type="submit" class="btn-secondary">Post</button>
+                </form>
+            </div>
+
+            <!-- Website Inquiries (New) -->
+            <div class="card full-width">
+                <h3>Recent Website Inquiries</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Message</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="owner-inquiries-list">
+                        <!-- Inquiries injected via JS -->
+                    </tbody>
+                </table>
+            </div>
             </div>
         </section>
     </main>
@@ -418,6 +449,15 @@
     <footer>
         <p>&copy; 2025 BrandiFy Digital. Automating your success.</p>
     </footer>
+
+    <!-- Global Announcement Modal -->
+    <div id="announcement-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3>📢 Announcement</h3>
+            <p id="announcement-text"></p>
+        </div>
+    </div>
 
     <script type="module" src="script.js"></script>
 </body>
