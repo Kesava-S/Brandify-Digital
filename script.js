@@ -1340,18 +1340,46 @@ if (multiStepForm) {
         if (progressFill) progressFill.style.width = `${progress}%`;
     };
 
+    // Validation Patterns
+    const patterns = {
+        businessName: { regex: /^[a-zA-Z0-9\s\.\-\&]+$/, msg: "Business Name can only contain letters, numbers, spaces, and . - &" },
+        industry: { regex: /^[a-zA-Z\s]+$/, msg: "Industry can only contain letters and spaces." },
+        size: { regex: /^[0-9\-\+]+$/, msg: "Size must be numbers (e.g., 10, 10-50, 100+)." },
+        location: { regex: /^[a-zA-Z0-9\s\,\.\-]+$/, msg: "Location contains invalid characters." },
+        website: { regex: /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/, msg: "Please enter a valid website URL." },
+        contactEmail: { regex: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, msg: "Please enter a valid email address." },
+        contactPerson: { regex: /^[a-zA-Z\s\.]+$/, msg: "Contact Name can only contain letters." },
+        budget: { regex: /^[0-9\$\,\.\-\s]+$/, msg: "Budget should be numeric (e.g. $1000, 5000-10000)." }
+    };
+
     // Next Buttons
     multiStepForm.querySelectorAll('.btn-next').forEach(btn => {
         btn.addEventListener('click', () => {
-            // Validate current step inputs (simple check)
-            const currentInputs = steps[currentStep].querySelectorAll('input[required], textarea[required]');
+            const currentInputs = steps[currentStep].querySelectorAll('input, textarea');
             let valid = true;
+            let firstErrorMsg = "";
+
             currentInputs.forEach(input => {
-                if (!input.value.trim()) {
+                const name = input.name;
+                const value = input.value.trim();
+                const isRequired = input.hasAttribute('required');
+
+                // Reset style
+                input.style.borderColor = '#cbd5e1';
+
+                // 1. Check Required
+                if (isRequired && !value) {
                     valid = false;
-                    input.style.borderColor = 'red';
-                } else {
-                    input.style.borderColor = '#cbd5e1';
+                    input.style.borderColor = '#ef4444'; // Red
+                    if (!firstErrorMsg) firstErrorMsg = "Please fill in all required fields.";
+                }
+                // 2. Check Patterns (if value exists)
+                else if (value && patterns[name]) {
+                    if (!patterns[name].regex.test(value)) {
+                        valid = false;
+                        input.style.borderColor = '#ef4444';
+                        if (!firstErrorMsg) firstErrorMsg = patterns[name].msg;
+                    }
                 }
             });
 
@@ -1361,7 +1389,7 @@ if (multiStepForm) {
                     updateStep();
                 }
             } else {
-                alert("Please fill in all required fields.");
+                alert(firstErrorMsg || "Please correct the highlighted fields.");
             }
         });
     });
