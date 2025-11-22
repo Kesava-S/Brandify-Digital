@@ -509,6 +509,36 @@ function initEmployeeDashboard() {
         }
     });
     unsubscribeListeners.push(unsubPayslips);
+
+    // Listen for Notifications (Employee)
+    const qNotif = query(collection(db, "notifications"), where("targetEmail", "==", currentUser.email), orderBy("createdAt", "desc"), limit(5));
+    const unsubNotif = onSnapshot(qNotif, (snapshot) => {
+        const notifList = document.querySelector('#view-dashboard-employee .notification-list');
+        // We might want to separate general announcements from personal notifications
+        // For now, let's prepend them
+        if (notifList) {
+            // Keep existing static announcements? Or clear? 
+            // Let's just add dynamic ones to the top
+            snapshot.forEach(doc => {
+                const note = doc.data();
+                // Check if already added to avoid duplicates if we don't clear
+                // Simpler: Clear and re-render mixed content if needed, or just use a separate list.
+                // Let's create a separate personal notification list
+                let personalList = document.getElementById('emp-personal-notifs');
+                if (!personalList) {
+                    personalList = document.createElement('ul');
+                    personalList.id = 'emp-personal-notifs';
+                    personalList.className = 'notification-list';
+                    notifList.parentNode.insertBefore(personalList, notifList);
+                }
+                personalList.innerHTML = ''; // Clear and rebuild
+                const li = document.createElement('li');
+                li.innerHTML = `🔔 ${note.message}`;
+                personalList.appendChild(li);
+            });
+        }
+    });
+    unsubscribeListeners.push(unsubNotif);
 }
 
 // Employee Report Submission
@@ -645,6 +675,34 @@ function initManagerDashboard() {
         }
     });
     unsubscribeListeners.push(unsubRequests);
+
+    // Listen for Notifications (Manager)
+    const qNotif = query(collection(db, "notifications"), where("targetRole", "==", "manager"), orderBy("createdAt", "desc"), limit(5));
+    const unsubNotif = onSnapshot(qNotif, (snapshot) => {
+        // Create or find a notification container for manager
+        // Assuming we inject it into the top of the dashboard or a specific area
+        // For now, let's alert if it's a very recent notification (last 10 seconds) to avoid spam on reload
+        // OR better, append to a notification list if we add one to Manager UI.
+        // Let's add a simple list to the top of Manager Hub
+        let notifContainer = document.getElementById('manager-notifications');
+        if (!notifContainer) {
+            const header = document.querySelector('#view-dashboard-manager .dashboard-header');
+            notifContainer = document.createElement('ul');
+            notifContainer.id = 'manager-notifications';
+            notifContainer.className = 'notification-list';
+            notifContainer.style.marginBottom = '1rem';
+            header.after(notifContainer);
+        }
+
+        notifContainer.innerHTML = '';
+        snapshot.forEach(doc => {
+            const note = doc.data();
+            const li = document.createElement('li');
+            li.innerHTML = `🔔 ${note.message}`;
+            notifContainer.appendChild(li);
+        });
+    });
+    unsubscribeListeners.push(unsubNotif);
 }
 
 // Manager Assign Task
@@ -688,10 +746,29 @@ if (mgrRoleForm) {
             try {
                 // Update the user's document in Firestore
                 const userRef = doc(db, "users", empId);
+
+                // Get current user data for name
+                const userSnap = await getDoc(userRef);
+                const userName = userSnap.exists() ? (userSnap.data().name || userSnap.data().email) : "Employee";
+
                 await updateDoc(userRef, {
-                    position: newRole // Updating 'position' field based on UI label "New Role (e.g. Senior Specialist)"
-                    // If you meant to change the access level 'role', use: role: newRole.toLowerCase()
+                    position: newRole
                 });
+
+                // Notify Admin
+                await addDoc(collection(db, "notifications"), {
+                    message: `Manager updated ${userName}'s position to: ${newRole}`,
+                    targetRole: 'owner',
+                    createdAt: Date.now()
+                });
+
+                // Notify Employee
+                await addDoc(collection(db, "notifications"), {
+                    message: `Your position has been updated to: ${newRole}`,
+                    targetEmail: userSnap.data().email, // Target specific user
+                    createdAt: Date.now()
+                });
+
                 alert(`Employee position updated to ${newRole}!`);
                 mgrRoleForm.reset();
             } catch (error) {
@@ -704,8 +781,8 @@ if (mgrRoleForm) {
 
 // --- 6. Owner Dashboard Logic ---
 function initOwnerDashboard() {
-    // Notifications
-    const qNotif = query(collection(db, "notifications"), orderBy("createdAt", "desc"), limit(10));
+    // Notifications (Admin/Owner)
+    const qNotif = query(collection(db, "notifications"), where("targetRole", "==", "owner"), orderBy("createdAt", "desc"), limit(10));
     const unsubNotif = onSnapshot(qNotif, (snapshot) => {
         const notifList = document.getElementById('owner-notifications');
         if (notifList) {
@@ -777,9 +854,23 @@ function initOwnerDashboard() {
             userList.querySelectorAll('.text-btn.delete').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
                     const uid = e.target.getAttribute('data-id');
+                    // Find user name for notification
+                    const userItem = snapshot.docs.find(d => d.id === uid).data();
+                    const userName = userItem.name || userItem.email;
+                    const userRole = userItem.role;
+
                     if (confirm('Are you sure you want to remove this user?')) {
                         try {
                             await deleteDoc(doc(db, "users", uid));
+
+                            // Notify Managers if an employee is removed
+                            if (userRole === 'employee') {
+                                await addDoc(collection(db, "notifications"), {
+                                    message: `Admin removed employee: ${userName}`,
+                                    targetRole: 'manager',
+                                    createdAt: Date.now()
+                                });
+                            }
                         } catch (err) {
                             console.error("Error deleting user:", err);
                             alert("Failed to delete user.");
@@ -804,6 +895,16 @@ function initOwnerDashboard() {
                         name: email.split('@')[0], // Default name
                         createdAt: Date.now()
                     });
+
+                    // Notify Managers if a new employee is added
+                    if (role === 'employee') {
+                        await addDoc(collection(db, "notifications"), {
+                            message: `Admin added new employee: ${email}`,
+                            targetRole: 'manager',
+                            createdAt: Date.now()
+                        });
+                    }
+
                     alert('User added successfully.');
                     emailInput.value = '';
                     roleInput.value = '';
