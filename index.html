@@ -326,6 +326,46 @@
             </header>
 
             <div class="dashboard-grid">
+                <!-- 1. Recent Inquiries (Moved to Top) -->
+                <div class="card full-width">
+                    <h3>Recent Inquiries</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>WhatsApp</th>
+                                <th>Business</th>
+                                <th>Needs</th>
+                                <th>Date</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mgr-inquiry-table">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 2. Recent Website Inquiries (New - Bookings) -->
+                <div class="card full-width">
+                    <h3>Recent Website Inquiries</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Contact</th>
+                                <th>Date/Time</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mgr-booking-table">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+
                 <!-- 1. My Tasks (Manager) -->
                 <div class="card">
                     <h3>My Tasks</h3>
@@ -423,25 +463,7 @@
                     </table>
                 </div>
 
-                <!-- Inquiry List (Manager) -->
-                <div class="card full-width">
-                    <h3>Recent Inquiries</h3>
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>WhatsApp</th>
-                                <th>Business</th>
-                                <th>Needs</th>
-                                <th>Date</th>
-                            </tr>
-                        </thead>
-                        <tbody id="mgr-inquiry-table">
-                            <!-- Populated via JS -->
-                        </tbody>
-                    </table>
-                </div>
+
             </div>
         </section>
 
@@ -496,7 +518,83 @@
             </header>
 
             <div class="dashboard-grid">
-                <!-- Financials -->
+                <!-- 1. Assign Task (Executive) -->
+                <div class="card full-width">
+                    <h3>Assign Task (Executive)</h3>
+                    <form id="owner-assign-task-form">
+                        <div class="form-row">
+                            <input type="text" id="owner-task-title" placeholder="Task Title" required>
+                            <select id="owner-task-target" required>
+                                <option value="">Select Manager or Employee</option>
+                                <!-- Populated via JS -->
+                            </select>
+                        </div>
+                        <textarea id="owner-task-desc" placeholder="Task Description" rows="2"></textarea>
+                        <div class="form-row">
+                            <input type="text" id="owner-task-project" placeholder="Project ID/Name" required>
+                            <input type="date" id="owner-task-deadline" required>
+                        </div>
+                        <button type="submit" class="btn-primary">Assign Task</button>
+                    </form>
+                </div>
+
+                <!-- 2. Global Task Monitoring -->
+                <div class="card full-width">
+                    <h3>Global Task Monitoring</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Task</th>
+                                <th>Assigned To</th>
+                                <th>Status</th>
+                                <th>Deadline</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-task-monitoring-table">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 3. Recent Inquiries -->
+                <div class="card full-width">
+                    <h3>Recent Inquiries</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>WhatsApp</th>
+                                <th>Business</th>
+                                <th>Needs</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="owner-inquiry-table">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 4. Recent Website Inquiries (New - Bookings) -->
+                <div class="card full-width">
+                    <h3>Recent Website Inquiries</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Contact</th>
+                                <th>Date/Time</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="owner-booking-table">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+
                 <!-- Client Onboarding (New) -->
                 <div class="card">
                     <h3>Onboard New Client</h3>
