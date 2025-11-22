@@ -304,6 +304,12 @@ if (navBtns.logout) navBtns.logout.addEventListener('click', async () => {
         unsubscribeListeners.forEach(unsub => unsub());
         unsubscribeListeners = [];
 
+        // Clear login form inputs
+        const loginEmail = document.getElementById('login-email');
+        const loginPass = document.getElementById('login-password');
+        if (loginEmail) loginEmail.value = '';
+        if (loginPass) loginPass.value = '';
+
         navBtns.login.classList.remove('hidden');
         navBtns.logout.classList.add('hidden');
         switchView('login'); // Redirect to login page instead of landing
