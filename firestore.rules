@@ -113,6 +113,7 @@ service cloud.firestore {
     match /applications/{appId} {
       allow create: if true;
       allow read: if isSignedIn();
+      allow write: if true; // DEBUG: Allow delete/update for now
     }
   }
 }

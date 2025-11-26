@@ -3,7 +3,7 @@ import {
     getFirestore, collection, getDocs, addDoc, query, where, onSnapshot, updateDoc, deleteDoc, doc, orderBy, limit, getDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+
 
 // --- FIREBASE CONFIGURATION ---
 // TODO: Replace with your actual Firebase project configuration
@@ -23,7 +23,6 @@ try {
     const app = initializeApp(firebaseConfig);
     db = getFirestore(app);
     auth = getAuth(app);
-    storage = getStorage(app);
     console.log("Firebase initialized");
 } catch (error) {
     console.error("Firebase initialization failed. Make sure to update firebaseConfig.", error);
@@ -966,7 +965,42 @@ function initManagerDashboard() {
                 }
             }
         });
+
     }
+
+    // 9. View Applications (Manager)
+    loadManagerApplications();
+}
+
+async function loadManagerApplications() {
+    const tbody = document.getElementById('mgr-applications-table');
+    if (!tbody) return;
+
+    const q = query(collection(db, "applications"), orderBy("createdAt", "desc"));
+    const unsub = onSnapshot(q, (snapshot) => {
+        tbody.innerHTML = '';
+        if (snapshot.empty) {
+            tbody.innerHTML = '<tr><td colspan="7">No applications received yet.</td></tr>';
+            return;
+        }
+        snapshot.forEach(doc => {
+            const app = doc.data();
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${app.name}</td>
+                <td>${app.jobTitle}</td>
+                <td>${app.email}</td>
+                <td>${app.phone}</td>
+                <td><a href="${app.resumeUrl}" target="_blank" class="text-btn">View PDF</a></td>
+                <td>${new Date(app.createdAt).toLocaleDateString()}</td>
+                <td>
+                    <button class="btn-small btn-danger" onclick="deleteApplication('${doc.id}')" style="background:#ef4444; color:white;">Delete</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    });
+    unsubscribeListeners.push(unsub);
 }
 
 // --- 6. Owner Dashboard Logic ---
@@ -1841,10 +1875,31 @@ if (appForm) {
 
             if (!resumeFile) throw new Error("Please upload a resume.");
 
-            // 1. Upload Resume to Firebase Storage
-            const storageRef = ref(storage, `resumes/${Date.now()}_${resumeFile.name}`);
-            await uploadBytes(storageRef, resumeFile);
-            const downloadUrl = await getDownloadURL(storageRef);
+            let downloadUrl = "#";
+
+            // 1. Upload Resume to Google Drive via Backend
+            const formData = new FormData();
+            formData.append('resume', resumeFile);
+
+            try {
+                const response = await fetch('http://localhost:3000/upload-resume', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Upload failed');
+                }
+
+                const result = await response.json();
+                downloadUrl = result.fileUrl;
+                console.log("File uploaded to Drive:", downloadUrl);
+
+            } catch (uploadError) {
+                console.error("Drive upload failed:", uploadError);
+                showToast("Resume upload failed. Submitting without file link.", "warning");
+            }
 
             // 2. Save Application to Firestore
             await addDoc(collection(db, "applications"), {
@@ -1858,10 +1913,7 @@ if (appForm) {
                 createdAt: Date.now()
             });
 
-            showToast("Application submitted successfully! Check your email for confirmation.", "success");
-
-            // Simulate Email Confirmation (Real email requires Cloud Functions)
-            console.log(`[SIMULATION] Sending confirmation email to ${email}...`);
+            showToast("Application submitted successfully!", "success");
 
             appForm.reset();
             document.getElementById('application-modal').classList.add('hidden');
@@ -1949,6 +2001,10 @@ async function loadOwnerApplications() {
     const q = query(collection(db, "applications"), orderBy("createdAt", "desc"));
     const unsub = onSnapshot(q, (snapshot) => {
         tbody.innerHTML = '';
+        if (snapshot.empty) {
+            tbody.innerHTML = '<tr><td colspan="7">No applications received yet.</td></tr>';
+            return;
+        }
         snapshot.forEach(doc => {
             const app = doc.data();
             const tr = document.createElement('tr');
@@ -1957,14 +2013,29 @@ async function loadOwnerApplications() {
                 <td>${app.jobTitle}</td>
                 <td>${app.email}</td>
                 <td>${app.phone}</td>
-                <td><a href="${app.resumeUrl}" target="_blank">View PDF</a></td>
+                <td><a href="${app.resumeUrl}" target="_blank" class="text-btn">View PDF</a></td>
                 <td>${new Date(app.createdAt).toLocaleDateString()}</td>
+                <td>
+                    <button class="btn-small btn-danger" onclick="deleteApplication('${doc.id}')" style="background:#ef4444; color:white;">Delete</button>
+                </td>
             `;
             tbody.appendChild(tr);
         });
     });
     unsubscribeListeners.push(unsub);
 }
+
+window.deleteApplication = async (appId) => {
+    if (confirm("Are you sure you want to delete this application?")) {
+        try {
+            await deleteDoc(doc(db, "applications", appId));
+            showToast("Application deleted.", "success");
+        } catch (e) {
+            console.error("Error deleting application:", e);
+            showToast("Failed to delete application.", "error");
+        }
+    }
+};
 async function toggleTaskStatus(taskId, currentStatus) {
     const newStatus = currentStatus === 'Completed' ? 'Pending' : 'Completed';
     const updateData = { status: newStatus };

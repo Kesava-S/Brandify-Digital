@@ -1,0 +1,28 @@
+{
+  "name": "brandify-digital",
+  "version": "1.0.0",
+  "description": "This is a prototype website for Kondamaal, a Marketing Automation company.",
+  "main": "script.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://Kesava-S@github.com/Kesava-S/Brandify-Digital.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Kesava-S/Brandify-Digital/issues"
+  },
+  "homepage": "https://github.com/Kesava-S/Brandify-Digital#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "googleapis": "^166.0.0",
+    "multer": "^2.0.2"
+  }
+}

@@ -96,3 +96,20 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 ```
+
+## 6. Node.js Backend (Google Drive Integration)
+To securely handle file uploads to Google Drive without exposing credentials, we introduced a lightweight Node.js/Express backend.
+
+### Architecture:
+- **Server**: Node.js + Express
+- **Middleware**: Multer (for file handling), CORS (for frontend access)
+- **Integration**: Google Drive API (v3) using Service Account
+- **Endpoint**: `POST /upload-resume`
+
+### Workflow:
+1. Frontend sends file to `localhost:3000/upload-resume`.
+2. Backend authenticates with Google using `service-account.json`.
+3. Backend streams file to the specified Drive Folder.
+4. Backend sets file permission to 'reader' (publicly accessible via link).
+5. Backend returns the `webViewLink`.
+6. Frontend saves this link to Firestore.
