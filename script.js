@@ -972,11 +972,37 @@ function initManagerDashboard() {
 // --- 6. Owner Dashboard Logic ---
 function initOwnerDashboard() {
     // loadOwnerInquiries(); // Logic is inline below
-    loadOwnerBookings(); // Load AI bookings
-    loadOwnerTasks();
-    loadGlobalTaskMonitoring();
-    loadOwnerProjects();
-    loadEmployeeDirectory();
+    // loadOwnerBookings(); // Load AI bookings (Logic below)
+
+    // Bookings Logic (AI Chatbot)
+    const bookingList = document.getElementById('owner-booking-table');
+    const qBookings = query(collection(db, "bookings"), orderBy("createdAt", "desc"), limit(20));
+    const unsubBookings = onSnapshot(qBookings, (snapshot) => {
+        if (bookingList) {
+            bookingList.innerHTML = '';
+            if (snapshot.empty) {
+                bookingList.innerHTML = '<tr><td colspan="5">No bookings yet.</td></tr>';
+            } else {
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${data.name || 'N/A'}</td>
+                        <td>${data.mobile || 'N/A'}</td>
+                        <td>${data.email || 'N/A'}</td>
+                        <td>${data.date || 'N/A'}</td>
+                        <td>${data.status || 'Pending'}</td>
+                    `;
+                    bookingList.appendChild(tr);
+                });
+            }
+        }
+    });
+    unsubscribeListeners.push(unsubBookings);
+    // loadOwnerTasks();
+    // loadGlobalTaskMonitoring();
+    // loadOwnerProjects();
+    // loadEmployeeDirectory();
     loadOwnerJobs(); // Load Careers
     loadOwnerApplications(); // Load Applications
     // Notifications (Admin/Owner)
