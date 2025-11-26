@@ -478,10 +478,36 @@ if (loginForm) {
                     showToast("Login successful but role is undefined.", "error");
                 }
             } else {
-                // Profile not found (Deleted or Unauthorized)
-                console.warn("User authenticated but no profile found.");
-                await signOut(auth);
-                showToast("Account not found or access revoked. Please contact Admin.", "error");
+                // Profile not found - Auto-create for demo purposes or handle gracefully
+                console.warn("User authenticated but no profile found. Creating default profile...");
+
+                let role = 'client'; // Default fallback
+                if (email.includes('admin')) role = 'owner';
+                if (email.includes('manager')) role = 'manager';
+                if (email.includes('emp')) role = 'employee';
+
+                const newProfile = {
+                    email: email,
+                    role: role,
+                    name: email.split('@')[0],
+                    createdAt: Date.now()
+                };
+
+                const docRef = await addDoc(collection(db, "users"), newProfile);
+                currentUser = { id: docRef.id, ...newProfile, uid: user.uid };
+
+                navBtns.login.classList.add('hidden');
+                navBtns.logout.classList.remove('hidden');
+
+                if (currentUser.role === 'employee') initEmployeeDashboard();
+                if (currentUser.role === 'manager') initManagerDashboard();
+                if (currentUser.role === 'client') initClientDashboard();
+                if (currentUser.role === 'owner') initOwnerDashboard();
+
+                const roleViewMap = { 'employee': 'employee', 'manager': 'manager', 'client': 'client', 'owner': 'owner' };
+                switchView(roleViewMap[currentUser.role]);
+
+                showToast("Profile created! Welcome.", "success");
             }
         } catch (error) {
             console.error("Login error:", error);
