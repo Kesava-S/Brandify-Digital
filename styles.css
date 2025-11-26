@@ -701,21 +701,59 @@ footer {
 
 /* Responsive */
 @media (max-width: 768px) {
-    .hero h1 {
-        font-size: 2.25rem;
-    }
-
-    .dashboard-grid {
-        grid-template-columns: 1fr;
-    }
-
     .navbar {
+        flex-direction: column;
+        gap: 1rem;
         padding: 1rem;
     }
 
-    .admin-grid {
+    .nav-links {
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .hero h1 {
+        font-size: 2rem;
+    }
+
+    .dashboard-grid,
+    .admin-grid,
+    .stat-grid {
         grid-template-columns: 1fr;
     }
+
+    main {
+        padding: 1.5rem 1rem;
+    }
+
+    .card {
+        padding: 1.5rem;
+    }
+}
+
+/* Careers Page Enhancements */
+#view-careers .card {
+    padding: 3rem;
+    /* Larger padding for more space */
+}
+
+#view-careers h3 {
+    font-size: 1.5rem;
+    /* Larger headings */
+    margin-bottom: 1.5rem;
+}
+
+#view-careers p {
+    font-size: 1.1rem;
+    /* Larger text */
+    line-height: 1.8;
+}
+
+#view-careers .job-card {
+    border-left: 5px solid var(--color-secondary);
+    /* Distinctive border */
+    padding: 2.5rem;
 }
 
 /* Multi-step Form Styles */
