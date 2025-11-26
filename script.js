@@ -275,10 +275,14 @@ let unsubscribeListeners = [];
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         console.log("Session restored for:", user.email);
-        // 1. Fetch User Profile
+
+        // 1. Update Navigation UI
+        navBtns.login.classList.add('hidden');
+        navBtns.logout.classList.remove('hidden');
+        navBtns.careers.classList.add('hidden'); // Hide Careers for logged-in users
+
+        // 2. Fetch User Profile
         // Try to find user by email (since we used email as key in seed, but moving to UID is better)
-        // Ideally: const docRef = doc(db, "users", user.uid);
-        // Fallback: Query by email
         const q = query(collection(db, "users"), where("email", "==", user.email));
         const snapshot = await getDocs(q);
 
@@ -286,53 +290,32 @@ onAuthStateChanged(auth, async (user) => {
             const userDoc = snapshot.docs[0];
             currentUser = { id: userDoc.id, ...userDoc.data(), uid: user.uid };
 
-            // Update UI
-            navBtns.login.classList.add('hidden');
-            navBtns.logout.classList.remove('hidden');
-
-            // Initialize Dashboard
+            // 3. Initialize Dashboard Logic
             if (currentUser.role === 'employee') initEmployeeDashboard();
             if (currentUser.role === 'manager') initManagerDashboard();
             if (currentUser.role === 'client') initClientDashboard();
             if (currentUser.role === 'owner') initOwnerDashboard();
 
-            if (user) {
-                // User is signed in
-                const uid = user.uid;
-                document.getElementById('nav-login').classList.add('hidden');
-                document.getElementById('nav-logout').classList.remove('hidden');
-                document.getElementById('nav-careers').classList.add('hidden'); // Hide Careers for logged-in users
-
-                // Fetch user role
-                try {
-                    const userDoc = await getDoc(doc(db, "users", uid));
-                    if (userDoc.exists()) {
-                        currentUser = userDoc.data();
-                        console.log("User loaded:", currentUser);
-                        switchView(currentUser.role);
-                    } else {
-                        console.error("User document not found!");
-                        signOut(auth);
-                    }
-                } catch (error) {
-                    console.error("Error fetching user profile:", error);
-                }
-            } else {
-                // User is signed out
-                currentUser = null;
-                document.getElementById('nav-login').classList.remove('hidden');
-                document.getElementById('nav-logout').classList.add('hidden');
-                document.getElementById('nav-careers').classList.remove('hidden'); // Show Careers for guests
-                switchView('landing');
+            // 4. Redirect if on landing page or login page
+            const activeView = document.querySelector('.view.active');
+            if (activeView && (activeView.id === 'view-landing' || activeView.id === 'view-login')) {
+                const roleViewMap = { 'employee': 'employee', 'manager': 'manager', 'client': 'client', 'owner': 'owner' };
+                switchView(roleViewMap[currentUser.role]);
             }
+        } else {
+            console.error("Auth valid but Firestore profile missing.");
+            await signOut(auth);
         }
     } else {
         console.log("No active session.");
         currentUser = null;
+
+        // 1. Update Navigation UI
         navBtns.login.classList.remove('hidden');
         navBtns.logout.classList.add('hidden');
-        // Don't auto-redirect to landing here to allow browsing, 
-        // but if they were on a dashboard, they should be kicked out.
+        navBtns.careers.classList.remove('hidden'); // Show Careers for guests
+
+        // 2. Redirect if on a dashboard
         const activeView = document.querySelector('.view.active');
         if (activeView && activeView.id.includes('dashboard')) {
             switchView('landing');
