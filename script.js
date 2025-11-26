@@ -166,51 +166,43 @@ async function seedDatabase() {
 
 const servicesData = [
     {
-        title: "Lead Generation & Nurturing",
+        title: "Instant Lead Capture & Routing",
         details: [
-            "Capture leads automatically from your website, ads, and social media.",
-            "Engage prospects with email and SMS drip campaigns.",
-            "Follow-up with WhatsApp sequences for faster conversions."
+            "Capture leads automatically from your website, Facebook, Instagram, or Google Ads.",
+            "Assign leads to the right salesperson based on location, interest, or product/service.",
+            "Receive real-time notifications via WhatsApp or email.",
+            "<strong>Plan Level:</strong> Starter",
+            "<strong>Why it matters:</strong> No leads are ever lost, and your team can respond instantly."
         ]
     },
     {
-        title: "Personalized CRM with Automation",
+        title: "Smart CRM Updates & Segmentation",
         details: [
-            "Capture leads via forms, chatbots, and landing pages, then segment them for target marketing.",
-            "Automated reminders and deal updates for your sales team.",
-            "Ensure no lead slips through the cracks with intelligent workflows."
+            "Automatically add new leads to your CRM or Google Sheets.",
+            "Tag leads by source, campaign, or service for targeted marketing.",
+            "Create automated reminders for follow-ups.",
+            "<strong>Plan Level:</strong> Starter / Advanced",
+            "<strong>Why it matters:</strong> Keeps all lead data organized and actionable, saving hours of manual work."
         ]
     },
     {
-        title: "Social Media Automation",
+        title: "Automated Lead Follow-Ups",
         details: [
-            "Schedule posts across all platforms to maintain a consistent presence.",
-            "Automate responses to messages and comments using chatbot flows.",
-            "Save time while staying engaged with your audience 24/7."
+            "Send personalized WhatsApp or email sequences to new leads.",
+            "Set multi-step follow-ups to increase response rates.",
+            "Integrates with lead capture workflow for seamless automation.",
+            "<strong>Plan Level:</strong> Advanced",
+            "<strong>Why it matters:</strong> Faster conversions without extra work from staff."
         ]
     },
     {
-        title: "Ads Automation",
+        title: "Ads Monitoring & Performance Reporting",
         details: [
-            "Automatically optimize Meta & Google ads for maximum ROI.",
-            "Set up retargeting campaigns and dynamic audience updates.",
-            "Reduce ad spend wastage and boost campaign performance."
-        ]
-    },
-    {
-        title: "Reporting & Insights",
-        details: [
-            "Receive automated weekly and monthly performance dashboards.",
-            "Track lead sources and campaign effectiveness effortlessly.",
-            "Make data-driven decisions without manual reporting."
-        ]
-    },
-    {
-        title: "Sales Automation",
-        details: [
-            "Enable automatic call booking and calendar integrations.",
-            "Reactivate abandoned leads with automated sequences.",
-            "Turn more prospects into customers with minimal effort."
+            "Monitor Facebook & Google Ads campaigns automatically.",
+            "Generate daily or weekly reports for ad spend, leads, CPL, ROAS, and conversions.",
+            "Receive alerts when campaigns need attention or optimization.",
+            "<strong>Plan Level:</strong> Advanced / Premium",
+            "<strong>Why it matters:</strong> Maximize ROI and remove the need for manual tracking."
         ]
     }
 ];
