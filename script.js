@@ -3,6 +3,7 @@ import {
     getFirestore, collection, getDocs, addDoc, query, where, onSnapshot, updateDoc, deleteDoc, doc, orderBy, limit, getDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
 // --- FIREBASE CONFIGURATION ---
 // TODO: Replace with your actual Firebase project configuration
@@ -17,11 +18,12 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-let db, auth;
+let db, auth, storage;
 try {
     const app = initializeApp(firebaseConfig);
     db = getFirestore(app);
     auth = getAuth(app);
+    storage = getStorage(app);
     console.log("Firebase initialized");
 } catch (error) {
     console.error("Firebase initialization failed. Make sure to update firebaseConfig.", error);
@@ -121,6 +123,16 @@ const INITIAL_DATA = {
     ],
     messages: [
         { senderId: "manager@kondamaal.com", receiverId: "client@kondamaal.com", message: "Project kickoff was successful.", type: "text", timestamp: Date.now() }
+    ],
+    careers: [
+        {
+            title: "Marketing Automation Specialist",
+            about: "We are looking for a tech-savvy marketer to lead our automation efforts.",
+            responsibilities: "• Design and implement email workflows.\n• Manage CRM integrations.\n• Analyze campaign performance.",
+            skills: "• HubSpot/Salesforce\n• Zapier/Make\n• HTML/CSS basics",
+            perks: "• Remote work\n• Learning budget\n• Health insurance",
+            createdAt: Date.now()
+        }
     ]
 };
 
@@ -145,6 +157,7 @@ async function seedDatabase() {
         await seed("payslips", INITIAL_DATA.payslips);
         await seed("invoices", INITIAL_DATA.invoices);
         await seed("messages", INITIAL_DATA.messages);
+        await seed("careers", INITIAL_DATA.careers);
 
         showToast("Database seeded with new comprehensive model! You can now login.", "success");
     }
@@ -245,13 +258,15 @@ const views = {
     employee: document.getElementById('view-dashboard-employee'),
     manager: document.getElementById('view-dashboard-manager'),
     client: document.getElementById('view-dashboard-client'),
-    owner: document.getElementById('view-dashboard-owner')
+    owner: document.getElementById('view-dashboard-owner'),
+    careers: document.getElementById('view-careers')
 };
 
 const navBtns = {
     home: document.getElementById('nav-home'),
     login: document.getElementById('nav-login'),
-    logout: document.getElementById('nav-logout')
+    logout: document.getElementById('nav-logout'),
+    careers: document.getElementById('nav-careers')
 };
 
 let currentUser = null;
@@ -323,6 +338,9 @@ function switchView(viewName) {
         void target.offsetWidth;
         target.classList.add('active');
         console.log(`Switched to view: ${viewName}`);
+
+        // Scroll to top
+        window.scrollTo(0, 0);
     } else {
         console.error(`View '${viewName}' not found.`);
     }
@@ -343,9 +361,26 @@ const navLogo = document.getElementById('nav-logo');
 if (navLogo) navLogo.addEventListener('click', goHome);
 
 if (navBtns.login) navBtns.login.addEventListener('click', () => switchView('login'));
+if (navBtns.careers) navBtns.careers.addEventListener('click', () => {
+    switchView('careers');
+    loadCareers(); // Load careers data when navigating to the careers page
+});
+if (navBtns.logout) navBtns.logout.addEventListener('click', async () => {
+    try {
+        // Unsubscribe all active listeners before logging out
+        unsubscribeListeners.forEach(unsub => unsub());
+        unsubscribeListeners = []; // Clear the array
 
-// Old logout listener removed to prevent duplicates and browser alerts.
-// See updated logic at the end of the file.
+        await signOut(auth);
+        currentUser = null;
+        showToast("Logged out successfully!", "success");
+        switchView('landing'); // Redirect to landing page after logout
+        // Clear any dashboard-specific UI elements or data if necessary
+    } catch (error) {
+        console.error("Logout error:", error);
+        showToast("Error logging out.", "error");
+    }
+});
 
 // --- 3. Unified Login Logic (Firestore) ---
 const loginForm = document.getElementById('unified-login-form');
@@ -907,6 +942,14 @@ function initManagerDashboard() {
 
 // --- 6. Owner Dashboard Logic ---
 function initOwnerDashboard() {
+    loadOwnerInquiries();
+    loadOwnerBookings(); // Load AI bookings
+    loadOwnerTasks();
+    loadGlobalTaskMonitoring();
+    loadOwnerProjects();
+    loadEmployeeDirectory();
+    loadOwnerJobs(); // Load Careers
+    loadOwnerApplications(); // Load Applications
     // Notifications (Admin/Owner)
     const qNotif = query(collection(db, "notifications"), where("targetRole", "==", "owner"), orderBy("createdAt", "desc"), limit(10));
     const unsubNotif = onSnapshot(qNotif, (snapshot) => {
@@ -1661,6 +1704,199 @@ if (navBtns.logout) {
 }
 
 // --- 13. Task Management Helpers ---
+// (Existing helpers...)
+
+// --- 14. Careers & Applications Logic ---
+
+// Load Careers for Public View
+async function loadCareers() {
+    const list = document.getElementById('careers-job-list');
+    if (!list) return;
+    list.innerHTML = '<p>Loading open positions...</p>';
+
+    try {
+        const q = query(collection(db, "careers"), orderBy("createdAt", "desc"));
+        const snapshot = await getDocs(q);
+
+        if (snapshot.empty) {
+            list.innerHTML = '<p>No open positions at the moment. Please check back later.</p>';
+            return;
+        }
+
+        list.innerHTML = '';
+        snapshot.forEach(doc => {
+            const job = doc.data();
+            const div = document.createElement('div');
+            div.className = 'job-card card';
+            div.style.marginBottom = '1.5rem';
+            div.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3>${job.title}</h3>
+                    <button class="btn-primary" onclick="openApplicationModal('${doc.id}', '${job.title}')">Apply Now</button>
+                </div>
+                <p><strong>About:</strong> ${job.about}</p>
+                <p><strong>Responsibilities:</strong></p>
+                <pre style="font-family:inherit; white-space:pre-wrap;">${job.responsibilities}</pre>
+                <p><strong>Required Skills:</strong></p>
+                <pre style="font-family:inherit; white-space:pre-wrap;">${job.skills}</pre>
+                <p><strong>Why you'll love this role:</strong></p>
+                <pre style="font-family:inherit; white-space:pre-wrap;">${job.perks}</pre>
+            `;
+            list.appendChild(div);
+        });
+    } catch (e) {
+        console.error("Error loading careers:", e);
+        list.innerHTML = '<p>Error loading positions.</p>';
+    }
+}
+
+// Application Modal Logic
+window.openApplicationModal = (jobId, jobTitle) => {
+    const modal = document.getElementById('application-modal');
+    document.getElementById('app-role-title').textContent = jobTitle;
+    document.getElementById('app-role-id').value = jobId;
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+};
+
+const closeAppModal = document.getElementById('close-app-modal');
+if (closeAppModal) {
+    closeAppModal.addEventListener('click', () => {
+        document.getElementById('application-modal').classList.add('hidden');
+        document.getElementById('application-modal').style.display = 'none';
+    });
+}
+
+// Handle Application Submit
+const appForm = document.getElementById('application-form');
+if (appForm) {
+    appForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const submitBtn = appForm.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Submitting...";
+
+        try {
+            const jobId = document.getElementById('app-role-id').value;
+            const name = document.getElementById('app-name').value;
+            const email = document.getElementById('app-email').value;
+            const phone = document.getElementById('app-phone').value;
+            const cover = document.getElementById('app-cover').value;
+            const resumeFile = document.getElementById('app-resume').files[0];
+
+            if (!resumeFile) throw new Error("Please upload a resume.");
+
+            // 1. Upload Resume to Firebase Storage
+            const storageRef = ref(storage, `resumes/${Date.now()}_${resumeFile.name}`);
+            await uploadBytes(storageRef, resumeFile);
+            const downloadUrl = await getDownloadURL(storageRef);
+
+            // 2. Save Application to Firestore
+            await addDoc(collection(db, "applications"), {
+                jobId,
+                jobTitle: document.getElementById('app-role-title').textContent,
+                name,
+                email,
+                phone,
+                coverLetter: cover,
+                resumeUrl: downloadUrl,
+                createdAt: Date.now()
+            });
+
+            showToast("Application submitted successfully! Check your email for confirmation.", "success");
+
+            // Simulate Email Confirmation (Real email requires Cloud Functions)
+            console.log(`[SIMULATION] Sending confirmation email to ${email}...`);
+
+            appForm.reset();
+            document.getElementById('application-modal').classList.add('hidden');
+            document.getElementById('application-modal').style.display = 'none';
+
+        } catch (error) {
+            console.error("Application error:", error);
+            showToast("Error submitting application: " + error.message, "error");
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Submit Application";
+        }
+    });
+}
+
+// --- Owner Careers Management ---
+
+async function loadOwnerJobs() {
+    const list = document.getElementById('owner-job-list');
+    if (!list) return;
+
+    // Real-time listener
+    const q = query(collection(db, "careers"), orderBy("createdAt", "desc"));
+    const unsub = onSnapshot(q, (snapshot) => {
+        list.innerHTML = '';
+        snapshot.forEach(doc => {
+            const job = doc.data();
+            const li = document.createElement('li');
+            li.innerHTML = `
+                <span>${job.title}</span>
+                <button class="btn-secondary" onclick="deleteJob('${doc.id}')">Delete</button>
+            `;
+            list.appendChild(li);
+        });
+    });
+    unsubscribeListeners.push(unsub);
+}
+
+window.deleteJob = async (jobId) => {
+    if (confirm("Are you sure you want to delete this role?")) {
+        await deleteDoc(doc(db, "careers", jobId));
+        showToast("Role deleted.", "success");
+    }
+};
+
+const ownerJobForm = document.getElementById('owner-add-job-form');
+if (ownerJobForm) {
+    ownerJobForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        try {
+            await addDoc(collection(db, "careers"), {
+                title: document.getElementById('job-title').value,
+                about: document.getElementById('job-about').value,
+                responsibilities: document.getElementById('job-responsibilities').value,
+                skills: document.getElementById('job-skills').value,
+                perks: document.getElementById('job-perks').value,
+                createdAt: Date.now()
+            });
+            showToast("New role posted!", "success");
+            ownerJobForm.reset();
+        } catch (e) {
+            console.error("Error posting job:", e);
+            showToast("Error posting job.", "error");
+        }
+    });
+}
+
+async function loadOwnerApplications() {
+    const tbody = document.getElementById('owner-applications-table');
+    if (!tbody) return;
+
+    const q = query(collection(db, "applications"), orderBy("createdAt", "desc"));
+    const unsub = onSnapshot(q, (snapshot) => {
+        tbody.innerHTML = '';
+        snapshot.forEach(doc => {
+            const app = doc.data();
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${app.name}</td>
+                <td>${app.jobTitle}</td>
+                <td>${app.email}</td>
+                <td>${app.phone}</td>
+                <td><a href="${app.resumeUrl}" target="_blank">View PDF</a></td>
+                <td>${new Date(app.createdAt).toLocaleDateString()}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    });
+    unsubscribeListeners.push(unsub);
+}
 async function toggleTaskStatus(taskId, currentStatus) {
     const newStatus = currentStatus === 'Completed' ? 'Pending' : 'Completed';
     const updateData = { status: newStatus };

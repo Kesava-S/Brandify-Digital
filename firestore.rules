@@ -98,5 +98,21 @@ service cloud.firestore {
       allow read: if isSignedIn();
       allow write: if isSignedIn();
     }
+
+    // Careers:
+    // - Read: Public
+    // - Write: Owner (Authenticated)
+    match /careers/{jobId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    // Applications:
+    // - Create: Public
+    // - Read: Owner (Authenticated)
+    match /applications/{appId} {
+      allow create: if true;
+      allow read: if isSignedIn();
+    }
   }
 }

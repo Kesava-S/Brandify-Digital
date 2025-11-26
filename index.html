@@ -18,6 +18,7 @@
         </div>
         <div class="nav-links">
             <button id="nav-home" class="nav-btn active">Home</button>
+            <button id="nav-careers" class="nav-btn">Careers</button>
             <button id="nav-login" class="nav-btn">Login</button>
             <button id="nav-logout" class="nav-btn hidden">Logout</button>
         </div>
@@ -224,6 +225,70 @@
                     <!-- Services injected via JS -->
                 </div>
             </section>
+        </section>
+        </section>
+
+        <!-- CAREERS VIEW -->
+        <section id="view-careers" class="view hidden">
+            <header class="hero" style="padding: 4rem 2rem;">
+                <h2 style="font-size: 1.8rem; margin-bottom: 1rem;">தனிப்பட்ட முயற்சி தரும் வெற்றி என்பது, அணிவகுப்பு
+                    முயற்சியில் பெருமை.</h2>
+                <p class="subtitle" style="font-style: italic;">Individual effort brings success, collective effort
+                    brings pride.</p>
+            </header>
+
+            <section class="inquiry-section">
+                <div class="card full-width" style="text-align: left; line-height: 1.6;">
+                    <h3>About Us</h3>
+                    <p>Our company embraces curious minds from all backgrounds—no need for top degrees, just the passion
+                        to learn quickly, think logically, and solve problems. Rooted in Tamil Nadu, our culture values
+                        simplicity, clarity, and hands-on learning with a strong focus on collaboration and relentless
+                        skill mastery. We equip every team member with the best industry-leading automation and
+                        marketing tools, ensuring they develop the skills needed to thrive in today’s rapidly evolving
+                        AI-driven world. Join us to be part of a collaborative environment where innovation meets
+                        practical impact, as we make marketing smarter together.</p>
+                </div>
+
+                <div class="card full-width">
+                    <h3>Open Roles</h3>
+                    <div id="careers-job-list" class="job-list">
+                        <!-- Jobs injected via JS -->
+                        <p>Loading open positions...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Application Modal -->
+            <div id="application-modal" class="modal hidden">
+                <div class="modal-content">
+                    <span class="close-modal" id="close-app-modal">&times;</span>
+                    <h3>Apply for <span id="app-role-title">Role</span></h3>
+                    <form id="application-form">
+                        <input type="hidden" id="app-role-id">
+                        <div class="form-group">
+                            <label>Name *</label>
+                            <input type="text" id="app-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email *</label>
+                            <input type="email" id="app-email" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Phone *</label>
+                            <input type="tel" id="app-phone" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Cover Letter (Why are you interested?)</label>
+                            <textarea id="app-cover" rows="4" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Resume (PDF only) *</label>
+                            <input type="file" id="app-resume" accept="application/pdf" required>
+                        </div>
+                        <button type="submit" class="btn-primary full-width-btn">Submit Application</button>
+                    </form>
+                </div>
+            </div>
         </section>
 
         <!-- UNIFIED LOGIN VIEW -->
@@ -631,25 +696,83 @@
                         </div>
                 </div>
 
-                <!-- Employee Directory (New) -->
+                <!-- Manage Careers (Owner) -->
                 <div class="card full-width">
-                    <h3>📂 Employee Directory</h3>
+                    <h3>Manage Careers</h3>
+                    <div class="admin-grid">
+                        <div class="admin-panel">
+                            <h4>Post a New Role</h4>
+                            <form id="owner-add-job-form">
+                                <div class="form-group">
+                                    <input type="text" id="job-title" placeholder="Role Title" required>
+                                </div>
+                                <div class="form-group">
+                                    <textarea id="job-about" placeholder="About the Role" rows="3" required></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <textarea id="job-responsibilities"
+                                        placeholder="Key Responsibilities (Bullet points)" rows="3" required></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <textarea id="job-skills" placeholder="Required Skills" rows="2"
+                                        required></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <textarea id="job-perks" placeholder="Why you'll love this role" rows="2"
+                                        required></textarea>
+                                </div>
+                                <button type="submit" class="btn-primary full-width-btn">Post Role</button>
+                            </form>
+                        </div>
+                        <div class="admin-panel">
+                            <h4>Active Job Listings</h4>
+                            <ul id="owner-job-list" class="file-list">
+                                <!-- Populated via JS -->
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- View Applications (Owner) -->
+                <div class="card full-width">
+                    <h3>Received Applications</h3>
                     <table class="data-table">
                         <thead>
                             <tr>
                                 <th>Name</th>
                                 <th>Role</th>
-                                <th>Department</th>
-                                <th>Email (Login ID)</th>
-                                <th>Password</th>
-                                <th>Action</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Resume</th>
+                                <th>Date</th>
                             </tr>
                         </thead>
-                        <tbody id="admin-employee-table">
+                        <tbody id="owner-applications-table">
                             <!-- Populated via JS -->
                         </tbody>
                     </table>
                 </div>
+            </div>
+
+            <!-- Employee Directory (New) -->
+            <div class="card full-width">
+                <h3>📂 Employee Directory</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Role</th>
+                            <th>Department</th>
+                            <th>Email (Login ID)</th>
+                            <th>Password</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-employee-table">
+                        <!-- Populated via JS -->
+                    </tbody>
+                </table>
+            </div>
             </div>
 
 
