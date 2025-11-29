@@ -220,6 +220,18 @@ const servicesData = [
 // --- 1. Render Services ---
 // --- 1. Render Services ---
 const accordionContainer = document.getElementById('services-accordion');
+
+function updateParentHeight(element) {
+    let parent = element.parentElement;
+    while (parent) {
+        if (parent.classList.contains('accordion-content')) {
+            // This is a parent content container. Update its max-height.
+            parent.style.maxHeight = parent.scrollHeight + "px";
+        }
+        parent = parent.parentElement;
+    }
+}
+
 if (accordionContainer) {
     accordionContainer.innerHTML = ''; // Clear default content
 
@@ -232,24 +244,35 @@ if (accordionContainer) {
                 <span style="font-size: 1.1rem; font-weight: 700;">${category.title}</span>
                 <span class="accordion-icon">▼</span>
             </div>
-            <div class="accordion-content" style="padding: 1rem;">
+            <div class="accordion-content" style="padding: 0.5rem;">
                 <div class="nested-accordion"></div>
             </div>
         `;
 
         const parentHeader = parentItem.querySelector('.accordion-header');
+        const parentContent = parentItem.querySelector('.accordion-content');
         const nestedContainer = parentItem.querySelector('.nested-accordion');
 
         // Toggle Parent
         parentHeader.addEventListener('click', (e) => {
             e.stopPropagation();
+            const isActive = parentItem.classList.contains('active');
+
             // Close other parents (siblings)
             [...accordionContainer.children].forEach(child => {
                 if (child !== parentItem && child.classList.contains('accordion-item')) {
                     child.classList.remove('active');
+                    child.querySelector('.accordion-content').style.maxHeight = null;
                 }
             });
-            parentItem.classList.toggle('active');
+
+            if (isActive) {
+                parentItem.classList.remove('active');
+                parentContent.style.maxHeight = null;
+            } else {
+                parentItem.classList.add('active');
+                parentContent.style.maxHeight = parentContent.scrollHeight + "px";
+            }
         });
 
         // 2. Create Sub-Services
@@ -270,15 +293,37 @@ if (accordionContainer) {
             `;
 
             const subHeader = subItem.querySelector('.accordion-header');
+            const subContent = subItem.querySelector('.accordion-content');
+
             subHeader.addEventListener('click', (e) => {
                 e.stopPropagation();
+                const isActive = subItem.classList.contains('active');
+
                 // Close other sub-services (siblings)
                 [...nestedContainer.children].forEach(child => {
                     if (child !== subItem && child.classList.contains('accordion-item')) {
                         child.classList.remove('active');
+                        child.querySelector('.accordion-content').style.maxHeight = null;
                     }
                 });
-                subItem.classList.toggle('active');
+
+                if (isActive) {
+                    subItem.classList.remove('active');
+                    subContent.style.maxHeight = null;
+                } else {
+                    subItem.classList.add('active');
+                    subContent.style.maxHeight = subContent.scrollHeight + "px";
+                }
+
+                // IMPORTANT: Update parent height to accommodate new child height
+                // We need to wait a tick for the DOM to update the child's expansion? 
+                // Actually, since we set style.maxHeight immediately, scrollHeight of parent should reflect it?
+                // No, transition takes time. But we want the TARGET height.
+                // The parent's scrollHeight will increase by the child's scrollHeight immediately if we set child maxHeight.
+
+                // Recalculate parent height
+                setTimeout(() => updateParentHeight(subItem), 50);
+                // Small delay ensures the browser has registered the child's expansion intent
             });
 
             nestedContainer.appendChild(subItem);
