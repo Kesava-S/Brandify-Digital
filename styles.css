@@ -73,6 +73,19 @@ body {
     letter-spacing: -0.5px;
 }
 
+.logo-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.logo .company-tag {
+    font-size: 0.85rem;
+    color: var(--color-secondary);
+    font-weight: 600;
+    margin-top: -2px;
+}
+
 .nav-links {
     display: flex;
     gap: 1rem;
