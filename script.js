@@ -166,6 +166,18 @@ async function seedDatabase() {
 
 const servicesData = [
     {
+        title: "Website Automation",
+        tagline: "Capture leads, update content, and post automatically.",
+        features: [
+            { icon: "📥", title: "Auto Lead Capture", desc: "Sync leads directly to CRM or Google Sheets." },
+            { icon: "✅", title: "Smart Form Responses", desc: "Validate entries and send automatic emails." },
+            { icon: "📅", title: "Scheduled Content Updates", desc: "Keep blogs and product pages fresh." },
+            { icon: "🌐", title: "Social Media Integration", desc: "Auto-post updates to your social channels." }
+        ],
+        whyMatters: "Reduce manual work, ensure accurate data, and maintain a professional web presence effortlessly.",
+        cta: "Start Website Automation"
+    },
+    {
         title: "Marketing Automation",
         tagline: "Capture. Engage. Convert.",
         features: [
