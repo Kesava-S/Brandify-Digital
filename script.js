@@ -167,48 +167,15 @@ async function seedDatabase() {
 const servicesData = [
     {
         title: "Marketing Automation",
-        subServices: [
-            {
-                title: "Instant Lead Capture & Routing",
-                details: [
-                    "Capture leads automatically from your website, Facebook, Instagram, or Google Ads.",
-                    "Assign leads to the right salesperson based on location, interest, or product/service.",
-                    "Receive real-time notifications via WhatsApp or email.",
-                    "<strong>Plan Level:</strong> Starter",
-                    "<strong>Why it matters:</strong> No leads are ever lost, and your team can respond instantly."
-                ]
-            },
-            {
-                title: "Smart CRM Updates & Segmentation",
-                details: [
-                    "Automatically add new leads to your CRM or Google Sheets.",
-                    "Tag leads by source, campaign, or service for targeted marketing.",
-                    "Create automated reminders for follow-ups.",
-                    "<strong>Plan Level:</strong> Starter / Advanced",
-                    "<strong>Why it matters:</strong> Keeps all lead data organized and actionable, saving hours of manual work."
-                ]
-            },
-            {
-                title: "Automated Lead Follow-Ups",
-                details: [
-                    "Send personalized WhatsApp or email sequences to new leads.",
-                    "Set multi-step follow-ups to increase response rates.",
-                    "Integrates with lead capture workflow for seamless automation.",
-                    "<strong>Plan Level:</strong> Advanced",
-                    "<strong>Why it matters:</strong> Faster conversions without extra work from staff."
-                ]
-            },
-            {
-                title: "Ads Monitoring & Performance Reporting",
-                details: [
-                    "Monitor Facebook & Google Ads campaigns automatically.",
-                    "Generate daily or weekly reports for ad spend, leads, CPL, ROAS, and conversions.",
-                    "Receive alerts when campaigns need attention or optimization.",
-                    "<strong>Plan Level:</strong> Advanced / Premium",
-                    "<strong>Why it matters:</strong> Maximize ROI and remove the need for manual tracking."
-                ]
-            }
-        ]
+        tagline: "Capture. Engage. Convert.",
+        features: [
+            { icon: "⚡", title: "Instant Lead Capture", desc: "Automatically get leads from your website or ads and send them to your CRM." },
+            { icon: "🔄", title: "Automated Follow-Ups", desc: "Personalized WhatsApp or email messages, sent instantly." },
+            { icon: "📊", title: "Easy Analytics", desc: "Track campaigns, leads, and conversions effortlessly." },
+            { icon: "📱", title: "Optional Social Posting", desc: "Auto-post to your social media and blog with built-in analytics." }
+        ],
+        whyMatters: "Never miss a lead, engage instantly, and make smarter marketing decisions—without extra work.",
+        cta: "See It in Action"
     }
 ];
 
@@ -275,59 +242,85 @@ if (accordionContainer) {
             }
         });
 
-        // 2. Create Sub-Services
-        category.subServices.forEach(service => {
-            const subItem = document.createElement('div');
-            subItem.className = 'accordion-item';
-            subItem.style.marginBottom = '0.5rem';
-            subItem.innerHTML = `
-                <div class="accordion-header">
-                    <span>${service.title}</span>
-                    <span class="accordion-icon">▼</span>
-                </div>
-                <div class="accordion-content">
-                    <ul>
-                        ${service.details.map(detail => `<li>${detail}</li>`).join('')}
-                    </ul>
+        // 2. Create Content based on Type
+        let contentHTML = '';
+
+        if (category.features) {
+            // Render New Rich Layout
+            contentHTML = `
+                <div class="service-detail-view">
+                    <p class="service-tagline">${category.tagline}</p>
+                    <div class="feature-grid">
+                        ${category.features.map(f => `
+                            <div class="feature-item">
+                                <span class="feature-icon">${f.icon}</span>
+                                <div class="feature-text">
+                                    <strong>${f.title}</strong> – ${f.desc}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="why-matters-box">
+                        <strong>Why it matters:</strong> ${category.whyMatters}
+                    </div>
+                    <button class="btn-primary cta-btn" onclick="document.querySelector('.inquiry-section').scrollIntoView({behavior: 'smooth'})">${category.cta}</button>
                 </div>
             `;
 
-            const subHeader = subItem.querySelector('.accordion-header');
-            const subContent = subItem.querySelector('.accordion-content');
+            // Append content directly
+            const contentDiv = parentItem.querySelector('.nested-accordion');
+            contentDiv.innerHTML = contentHTML;
+            // Remove padding from nested-accordion if we want full control in service-detail-view
+            contentDiv.style.padding = '0';
 
-            subHeader.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const isActive = subItem.classList.contains('active');
+        } else if (category.subServices) {
+            // Render Old Nested Accordion Layout (Legacy support)
+            category.subServices.forEach(service => {
+                const subItem = document.createElement('div');
+                subItem.className = 'accordion-item';
+                subItem.style.marginBottom = '0.5rem';
+                subItem.innerHTML = `
+                    <div class="accordion-header">
+                        <span>${service.title}</span>
+                        <span class="accordion-icon">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        <ul>
+                            ${service.details.map(detail => `<li>${detail}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
 
-                // Close other sub-services (siblings)
-                [...nestedContainer.children].forEach(child => {
-                    if (child !== subItem && child.classList.contains('accordion-item')) {
-                        child.classList.remove('active');
-                        child.querySelector('.accordion-content').style.maxHeight = null;
+                const subHeader = subItem.querySelector('.accordion-header');
+                const subContent = subItem.querySelector('.accordion-content');
+
+                subHeader.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const isActive = subItem.classList.contains('active');
+
+                    // Close other sub-services (siblings)
+                    [...nestedContainer.children].forEach(child => {
+                        if (child !== subItem && child.classList.contains('accordion-item')) {
+                            child.classList.remove('active');
+                            child.querySelector('.accordion-content').style.maxHeight = null;
+                        }
+                    });
+
+                    if (isActive) {
+                        subItem.classList.remove('active');
+                        subContent.style.maxHeight = null;
+                    } else {
+                        subItem.classList.add('active');
+                        subContent.style.maxHeight = subContent.scrollHeight + "px";
                     }
+
+                    // Recalculate parent height
+                    setTimeout(() => updateParentHeight(subItem), 50);
                 });
 
-                if (isActive) {
-                    subItem.classList.remove('active');
-                    subContent.style.maxHeight = null;
-                } else {
-                    subItem.classList.add('active');
-                    subContent.style.maxHeight = subContent.scrollHeight + "px";
-                }
-
-                // IMPORTANT: Update parent height to accommodate new child height
-                // We need to wait a tick for the DOM to update the child's expansion? 
-                // Actually, since we set style.maxHeight immediately, scrollHeight of parent should reflect it?
-                // No, transition takes time. But we want the TARGET height.
-                // The parent's scrollHeight will increase by the child's scrollHeight immediately if we set child maxHeight.
-
-                // Recalculate parent height
-                setTimeout(() => updateParentHeight(subItem), 50);
-                // Small delay ensures the browser has registered the child's expansion intent
+                nestedContainer.appendChild(subItem);
             });
-
-            nestedContainer.appendChild(subItem);
-        });
+        }
 
         accordionContainer.appendChild(parentItem);
     });
