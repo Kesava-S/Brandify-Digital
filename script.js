@@ -176,6 +176,17 @@ const servicesData = [
         ],
         whyMatters: "Never miss a lead, engage instantly, and make smarter marketing decisions—without extra work.",
         cta: "See It in Action"
+    },
+    {
+        title: "Customer Support & Chatbot Automation",
+        tagline: "Respond faster. Reduce workload. Delight customers.",
+        features: [
+            { icon: "💬", title: "Multi-Channel Chatbots", desc: "Website, WhatsApp, and Messenger." },
+            { icon: "🎫", title: "Auto-Ticketing", desc: "Queries converted into tickets automatically." },
+            { icon: "🤖", title: "Smart FAQ Automation", desc: "Auto-replies for FAQs with human escalation for complex issues." }
+        ],
+        whyMatters: "Get instant support automation, faster resolution, and happier customers—all without extra effort.",
+        cta: "Automate Support Now"
     }
 ];
 
