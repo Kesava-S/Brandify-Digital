@@ -279,6 +279,17 @@ const servicesData = [
         ],
         whyMatters: "Reduce errors, save time, and maintain reliable data for decision-making.",
         cta: "Start Data Automation"
+    },
+    {
+        title: "Social Media & Content Automation",
+        tagline: "Post smarter. Save time. Boost engagement.",
+        features: [
+            { icon: "📢", title: "Auto-Posting", desc: "Pull blogs or RSS feeds directly to your social channels." },
+            { icon: "🗓️", title: "Scheduling & Reposting", desc: "Schedule posts and automatically repost top-performing content." },
+            { icon: "📈", title: "Analytics Integration", desc: "Track engagement and optimize content automatically." }
+        ],
+        whyMatters: "Maintain a professional digital presence without extra effort.",
+        cta: "Start Social Automation"
     }
 ];
 
