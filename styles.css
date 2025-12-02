@@ -489,28 +489,7 @@ select:focus {
     font-size: 0.8rem;
 }
 
-.packages-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 2rem;
-    font-size: 0.9rem;
-}
 
-.packages-table th,
-.packages-table td {
-    border: 1px solid #e2e8f0;
-    padding: 0.75rem;
-    text-align: left;
-}
-
-.packages-table th {
-    background: var(--bg-light);
-    color: var(--color-primary);
-}
-
-.packages-table tr:nth-child(even) {
-    background: #f8fafc;
-}
 
 .differentiation-list {
     list-style: none;

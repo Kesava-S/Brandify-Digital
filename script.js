@@ -250,11 +250,6 @@ const servicesData = [
             "“All-in-one” funnels instead of separate tools",
             "GDPR-compliant, UK-based best practices"
         ],
-        packages: [
-            { name: "Starter", services: "Lead capture + email auto + basic CRM integration", price: "£500 setup", fee: "£50-£100/month" },
-            { name: "Growth", services: "Starter + social automation + dashboards", price: "£1,500 setup", fee: "£150/month" },
-            { name: "Premium", services: "Growth + chatbot + invoice + full funnel automation", price: "£3,500 setup", fee: "£300-£500/month" }
-        ],
         whyMatters: "All-in-one packages combining lead capture, CRM, social, support, and funnel in one workflow.",
         cta: "Build My Funnel"
     },
@@ -383,27 +378,7 @@ if (accordionContainer) {
                         `).join('')}
                     </div>
 
-                    <h4 style="margin-bottom: 1rem; color: var(--color-primary);">Packages & Pricing</h4>
-                    <table class="packages-table">
-                        <thead>
-                            <tr>
-                                <th>Package</th>
-                                <th>Services</th>
-                                <th>Price (GBP)</th>
-                                <th>Ongoing Fee</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${category.packages.map(pkg => `
-                                <tr>
-                                    <td><strong>${pkg.name}</strong></td>
-                                    <td>${pkg.services}</td>
-                                    <td>${pkg.price}</td>
-                                    <td>${pkg.fee}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
+                    </div>
 
                     <h4 style="margin-bottom: 1rem; color: var(--color-primary);">Why Choose Us?</h4>
                     <ul class="differentiation-list">
