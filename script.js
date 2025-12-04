@@ -251,17 +251,7 @@ const servicesData = [
                 whyMatters: "Eliminate data silos and make your tools talk to each other.",
                 cta: "Connect My Apps"
             },
-            {
-                title: "Custom API Development",
-                tagline: "Build custom connections. Scale without limits.",
-                features: [
-                    { icon: "🛡️", title: "Secure API Endpoints", desc: "Robust and secure data exchange." },
-                    { icon: "🚀", title: "Scalable Architecture", desc: "Built to handle growing data loads." },
-                    { icon: "📚", title: "Documentation", desc: "Clear guides for developers and integrators." }
-                ],
-                whyMatters: "Get bespoke solutions when off-the-shelf tools aren't enough.",
-                cta: "Build Custom API"
-            }
+
         ]
     },
     {
