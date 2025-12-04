@@ -255,7 +255,7 @@ const servicesData = [
         ]
     },
     {
-        category: "3. Web & App Development",
+        category: "3. Development",
         services: [
             {
                 title: "Website Development",
