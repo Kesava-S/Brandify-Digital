@@ -175,7 +175,7 @@ const servicesData = [
                     { icon: "⚡", title: "Instant Lead Capture", desc: "Automatically get leads from your website or ads and send them to your CRM." },
                     { icon: "🔄", title: "Automated Follow-Ups", desc: "Personalized WhatsApp or email messages, sent instantly." },
                     { icon: "📊", title: "Easy Analytics", desc: "Track campaigns, leads, and conversions effortlessly." },
-                    { icon: "📱", title: "Optional Social Posting", desc: "Auto-post to your social media and blog with built-in analytics." }
+
                 ],
                 whyMatters: "Never miss a lead, engage instantly, and make smarter marketing decisions—without extra work.",
                 cta: "See It in Action"
