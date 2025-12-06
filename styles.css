@@ -1,29 +1,20 @@
 :root {
-    /* Apple-Style Palette */
-    --color-primary: #1d1d1f;
-    /* Almost black */
-    --color-secondary: #0066cc;
+    /* Premium Dark Cinematic Palette */
+    --bg-color: #000000;
+    --bg-secondary: #0a0a0a;
+    --bg-card: #151516;
+
+    --text-main: #f5f5f7;
+    --text-muted: #86868b;
+    --text-glow: rgba(255, 255, 255, 0.8);
+
+    --accent-color: #2997ff;
     /* Apple Blue */
-    --color-accent: #f5f5f7;
-    /* Light Gray Background */
+    --accent-glow: rgba(41, 151, 255, 0.4);
 
-    --bg-color: #ffffff;
-    --bg-light: #f5f5f7;
-    /* Apple's light gray section bg */
+    --font-main: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
 
-    --text-main: #1d1d1f;
-    --text-light: #86868b;
-    --white: #ffffff;
-    --alert: #ff3b30;
-
-    --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-
-    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.04);
-    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.08);
-    --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.12);
-
-    --radius-lg: 20px;
-    --radius-xl: 30px;
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 * {
@@ -31,169 +22,167 @@
     padding: 0;
     box-sizing: border-box;
     -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
 }
 
 body {
     font-family: var(--font-main);
     background-color: var(--bg-color);
     color: var(--text-main);
-    line-height: 1.47059;
-    font-weight: 400;
-    letter-spacing: -0.022em;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
+    line-height: 1.5;
+    overflow-x: hidden;
 }
 
-/* Navigation - Apple Style */
+/* Cinematic Navbar */
 .navbar {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    padding: 1.5rem 3rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0 2rem;
-    height: 48px;
-    /* Standard Apple nav height */
-    background: rgba(255, 255, 255, 0.8);
-    backdrop-filter: saturate(180%) blur(20px);
-    position: sticky;
-    top: 0;
-    z-index: 9999;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-    transition: background 0.3s ease;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(20px);
+    z-index: 1000;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.4s ease;
 }
 
 .logo {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    cursor: pointer;
+    gap: 1rem;
     text-decoration: none;
 }
 
 .logo-img {
-    height: 24px;
-    /* Smaller, subtle logo */
-    width: auto;
-    object-fit: contain;
-}
-
-.logo-text {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+    height: 32px;
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.3));
 }
 
 .logo span {
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     font-weight: 600;
-    color: var(--color-primary);
-    letter-spacing: -0.01em;
-}
-
-.logo .company-tag {
-    display: none;
-    /* Hide tag for cleaner look */
+    color: var(--text-main);
+    letter-spacing: -0.02em;
 }
 
 .nav-links {
     display: flex;
-    gap: 2rem;
+    gap: 2.5rem;
 }
 
 .nav-btn {
-    background: transparent;
+    background: none;
     border: none;
-    color: var(--text-main);
-    font-family: var(--font-main);
-    font-weight: 400;
-    font-size: 0.85rem;
-    /* Smaller, cleaner font */
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    font-weight: 500;
     cursor: pointer;
-    transition: color 0.2s ease;
-    padding: 0;
-    opacity: 0.8;
+    transition: color 0.3s ease;
 }
 
 .nav-btn:hover,
 .nav-btn.active {
-    color: var(--color-secondary);
-    opacity: 1;
+    color: var(--text-main);
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
 }
 
-/* Main Layout */
-main {
-    flex: 1;
-    width: 100%;
-    max-width: 100%;
-    /* Full width */
-    padding: 0;
-    margin: 0;
+/* Immersive Hero Section */
+.hero {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    background: radial-gradient(circle at center, #1a1a1a 0%, #000000 70%);
 }
 
-.view {
-    display: none;
-    animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-    /* Smooth Apple-like ease */
+.hero::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 120%;
+    height: 120%;
+    background: radial-gradient(circle, rgba(41, 151, 255, 0.15) 0%, transparent 60%);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    animation: pulseGlow 8s infinite alternate;
 }
 
-.view.active {
-    display: block;
+.hero h1 {
+    font-size: 5rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    background: linear-gradient(180deg, #ffffff 0%, #86868b 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    transform: translateY(30px);
+    animation: fadeInUp 1.2s var(--ease-out-expo) forwards;
 }
 
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
+.hero .subtitle {
+    font-size: 1.8rem;
+    color: var(--text-main);
+    font-weight: 400;
+    margin-bottom: 1rem;
+    opacity: 0;
+    transform: translateY(30px);
+    animation: fadeInUp 1.2s var(--ease-out-expo) 0.2s forwards;
+}
 
+.hero-tagline {
+    font-size: 1.2rem;
+    color: var(--text-muted);
+    opacity: 0;
+    transform: translateY(30px);
+    animation: fadeInUp 1.2s var(--ease-out-expo) 0.4s forwards;
+}
+
+@keyframes fadeInUp {
     to {
         opacity: 1;
         transform: translateY(0);
     }
 }
 
+@keyframes pulseGlow {
+    0% {
+        opacity: 0.5;
+        transform: translate(-50%, -50%) scale(1);
+    }
+
+    100% {
+        opacity: 0.8;
+        transform: translate(-50%, -50%) scale(1.1);
+    }
+}
+
+/* Main Layout */
+main {
+    padding: 0;
+    max-width: 100%;
+}
+
+.view {
+    display: none;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+}
+
+.view.active {
+    display: block;
+    opacity: 1;
+}
+
 .hidden {
     display: none !important;
-}
-
-/* Hero Section - Apple Style */
-.hero {
-    text-align: center;
-    padding: 6rem 2rem 4rem;
-    max-width: 980px;
-    margin: 0 auto;
-}
-
-.hero h1 {
-    font-size: 56px;
-    /* Large hero text */
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    color: var(--color-primary);
-    line-height: 1.07143;
-    letter-spacing: -0.005em;
-}
-
-.subtitle {
-    font-size: 24px;
-    color: var(--text-main);
-    font-weight: 400;
-    margin-bottom: 0.8rem;
-    line-height: 1.16667;
-    letter-spacing: 0.009em;
-}
-
-.hero-tagline {
-    font-size: 19px;
-    color: var(--text-light);
-    font-weight: 400;
-    margin-top: 0;
-    line-height: 1.4211;
-    letter-spacing: 0.012em;
-    max-width: 700px;
-    margin-left: auto;
-    margin-right: auto;
 }
 
 /* Cards */
@@ -1075,84 +1064,88 @@ textarea.error {
 }
 
 /* --- Services Grid Redesign --- */
+/* --- Services Grid (Dark Cinematic) --- */
 .services-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 24px;
-    /* Apple standard gap */
-    padding: 2rem 0;
-    max-width: 1200px;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 30px;
+    padding: 4rem 2rem;
+    max-width: 1400px;
     margin: 0 auto;
 }
 
 .service-card {
-    background: var(--white);
-    border-radius: 28px;
-    /* Larger Apple-style radius */
-    padding: 3rem 2.5rem;
+    background: var(--bg-card);
+    border-radius: 30px;
+    padding: 4rem 3rem;
     cursor: pointer;
-    transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+    transition: all 0.5s var(--ease-out-expo);
+    border: 1px solid rgba(255, 255, 255, 0.05);
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    min-height: 320px;
+    min-height: 400px;
     position: relative;
     overflow: hidden;
-    text-align: center;
-    /* Centered content like Apple product cards */
-    align-items: center;
+    text-align: left;
+    align-items: flex-start;
 }
 
 .service-card:hover {
     transform: scale(1.02);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
 }
 
 .service-card h3 {
-    font-size: 28px;
-    font-weight: 600;
+    font-size: 2.5rem;
+    font-weight: 700;
     color: var(--text-main);
     margin-top: 1rem;
-    margin-bottom: 0.8rem;
+    margin-bottom: 1rem;
     line-height: 1.1;
-    letter-spacing: 0.007em;
+    letter-spacing: -0.02em;
+    z-index: 2;
 }
 
 .service-card p {
-    font-size: 17px;
-    color: var(--text-light);
-    line-height: 1.47059;
-    letter-spacing: -0.022em;
-    max-width: 280px;
-    margin: 0 auto;
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    max-width: 90%;
+    margin-bottom: 2rem;
+    z-index: 2;
 }
 
 .service-card .card-arrow {
     margin-top: auto;
-    /* Push to bottom */
-    font-size: 2rem;
-    color: var(--color-secondary);
-    opacity: 0;
-    transform: translateY(10px);
-    transition: all 0.3s ease;
+    font-size: 2.5rem;
+    color: var(--accent-color);
+    opacity: 0.6;
+    transform: translateX(0);
+    transition: all 0.4s ease;
+    z-index: 2;
 }
 
 .service-card:hover .card-arrow {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateX(10px);
+    text-shadow: 0 0 15px var(--accent-glow);
 }
 
+/* Cinematic Glow Effect on Hover */
 .service-card::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, rgba(37, 99, 235, 0.03) 0%, rgba(255, 255, 255, 0) 100%);
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(41, 151, 255, 0.1) 0%, transparent 60%);
     opacity: 0;
-    transition: opacity 0.4s ease;
+    transition: opacity 0.6s ease;
+    pointer-events: none;
+    z-index: 1;
 }
 
 .service-card:hover::before {
@@ -1204,68 +1197,86 @@ textarea.error {
     line-height: 1.1;
 }
 
+/* --- Service Detail View (Dark Cinematic) --- */
+.sd-hero {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 2rem;
+    background: radial-gradient(circle at center, #111 0%, #000 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.sd-hero h1 {
+    font-size: 5rem;
+    font-weight: 800;
+    background: linear-gradient(180deg, #fff 0%, #aaa 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    transform: translateY(30px);
+    animation: fadeInUp 1s var(--ease-out-expo) forwards;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+}
+
 .sd-hero p {
-    font-size: 1.75rem;
-    /* Larger on desktop */
-    color: var(--text-light);
+    font-size: 1.8rem;
+    color: var(--text-muted);
     max-width: 800px;
     line-height: 1.5;
     opacity: 0;
     transform: translateY(30px);
-    animation: fadeInUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+    animation: fadeInUp 1s var(--ease-out-expo) 0.2s forwards;
     font-weight: 400;
 }
 
 @media (max-width: 768px) {
-    .sd-hero {
-        padding: 1rem;
-        height: 80vh;
-        /* Slightly shorter on mobile */
-    }
-
     .sd-hero h1 {
-        font-size: 2.5rem;
-        /* Much smaller on mobile */
-        margin-bottom: 1rem;
+        font-size: 3rem;
     }
 
     .sd-hero p {
-        font-size: 1.1rem;
-        max-width: 100%;
-        padding: 0 1rem;
+        font-size: 1.2rem;
     }
 }
 
 .sd-section {
-    min-height: 80vh;
+    min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 4rem 2rem;
+    padding: 6rem 2rem;
     position: relative;
+    background: var(--bg-color);
 }
 
 .sd-section.bg-light {
-    background: #f8fafc;
+    background: var(--bg-secondary);
 }
 
 .sd-container {
-    max-width: 1000px;
+    max-width: 1200px;
     width: 100%;
     display: grid;
     grid-template-columns: 1fr;
-    gap: 4rem;
+    gap: 6rem;
     align-items: center;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 1024px) {
     .sd-container {
         grid-template-columns: 1fr 1fr;
     }
 
     .sd-container.reversed {
         direction: rtl;
-        /* Simple way to swap columns, reset text direction in children */
     }
 
     .sd-container.reversed>* {
@@ -1274,35 +1285,38 @@ textarea.error {
 }
 
 .sd-content h2 {
-    font-size: 2.5rem;
-    font-weight: 600;
+    font-size: 3.5rem;
+    font-weight: 700;
     margin-bottom: 1.5rem;
-    color: var(--color-primary);
+    color: var(--text-main);
+    letter-spacing: -0.02em;
 }
 
 .sd-content p {
-    font-size: 1.1rem;
-    color: var(--text-light);
-    line-height: 1.7;
+    font-size: 1.25rem;
+    color: var(--text-muted);
+    line-height: 1.6;
     margin-bottom: 2rem;
 }
 
 .sd-visual {
-    background: #e2e8f0;
-    border-radius: 24px;
-    height: 400px;
+    background: var(--bg-card);
+    border-radius: 30px;
+    height: 500px;
     width: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 3rem;
-    color: #94a3b8;
-    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.1);
-    transition: transform 0.5s ease;
+    font-size: 4rem;
+    color: var(--text-muted);
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: transform 0.6s var(--ease-out-expo);
 }
 
 .sd-visual:hover {
-    transform: scale(1.02);
+    transform: scale(1.03);
+    border-color: rgba(255, 255, 255, 0.1);
 }
 
 /* Scroll Animations */
@@ -1319,76 +1333,59 @@ textarea.error {
 
 /* Feature Grid in Detail View */
 /* Feature Grid in Detail View - Apple Style Bento Grid */
+/* --- Feature Grid in Detail View (Dark Cinematic) --- */
 .sd-features-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    /* Fixed 3 columns for desktop */
-    gap: 24px;
-    /* Apple uses specific spacing */
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
     width: 100%;
-    margin-top: 3rem;
+    margin-top: 4rem;
 }
 
-@media (max-width: 1024px) {
-    .sd-features-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
+.sd-feature-card {
+    background: var(--bg-card);
+    padding: 3rem 2rem;
+    border-radius: 24px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    transition: all 0.4s var(--ease-out-expo);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    height: 100%;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sd-feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.sd-feature-icon {
+    display: none;
+    /* Icons removed as per previous request */
+}
+
+.sd-feature-card h3 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: var(--text-main);
+    letter-spacing: -0.01em;
+}
+
+.sd-feature-card p {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-bottom: 0;
+    max-width: 90%;
 }
 
 @media (max-width: 768px) {
     .sd-features-grid {
         grid-template-columns: 1fr;
-    }
-}
-
-.sd-feature-card {
-    background: #ffffff;
-    padding: 3rem 2rem;
-    border-radius: 24px;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
-    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    /* Center horizontally */
-    justify-content: center;
-    /* Center vertically */
-    text-align: center;
-    /* Center text */
-    height: 100%;
-}
-
-.sd-feature-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
-}
-
-/* Icons removed as per request */
-.sd-feature-icon {
-    display: none;
-}
-
-.sd-feature-card h3 {
-    font-size: 1.5rem;
-    /* Larger title */
-    font-weight: 600;
-    margin-bottom: 1rem;
-    color: #1e293b;
-    letter-spacing: -0.02em;
-}
-
-.sd-feature-card p {
-    font-size: 1.05rem;
-    color: #64748b;
-    line-height: 1.6;
-    margin-bottom: 0;
-    max-width: 90%;
-    /* Prevent text from hitting edges too hard */
-}
-
-@keyframes fadeInUp {
-    to {
-        opacity: 1;
-        transform: translateY(0);
     }
 }
