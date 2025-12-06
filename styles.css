@@ -53,6 +53,8 @@ body {
     align-items: center;
     gap: 1rem;
     text-decoration: none;
+    cursor: pointer;
+    /* Fix: Ensure pointer cursor */
 }
 
 .logo-img {
@@ -70,6 +72,24 @@ body {
 .nav-links {
     display: flex;
     gap: 2.5rem;
+}
+
+@media (max-width: 768px) {
+    .navbar {
+        padding: 1rem 1.5rem;
+    }
+
+    .nav-links {
+        gap: 1rem;
+    }
+
+    .nav-btn {
+        font-size: 0.8rem;
+    }
+
+    .logo span {
+        font-size: 1rem;
+    }
 }
 
 .nav-btn {
@@ -99,6 +119,8 @@ body {
     position: relative;
     overflow: hidden;
     background: radial-gradient(circle at center, #1a1a1a 0%, #000000 70%);
+    padding: 0 1.5rem;
+    /* Add padding for mobile */
 }
 
 .hero::before {
@@ -127,6 +149,14 @@ body {
     animation: fadeInUp 1.2s var(--ease-out-expo) forwards;
 }
 
+@media (max-width: 768px) {
+    .hero h1 {
+        font-size: 3rem;
+        /* Smaller font for mobile */
+        line-height: 1.1;
+    }
+}
+
 .hero .subtitle {
     font-size: 1.8rem;
     color: var(--text-main);
@@ -135,6 +165,12 @@ body {
     opacity: 0;
     transform: translateY(30px);
     animation: fadeInUp 1.2s var(--ease-out-expo) 0.2s forwards;
+}
+
+@media (max-width: 768px) {
+    .hero .subtitle {
+        font-size: 1.2rem;
+    }
 }
 
 .hero-tagline {
@@ -1074,6 +1110,15 @@ textarea.error {
     margin: 0 auto;
 }
 
+@media (max-width: 768px) {
+    .services-grid {
+        grid-template-columns: 1fr;
+        /* Single column on mobile */
+        padding: 2rem 1.5rem;
+        gap: 20px;
+    }
+}
+
 .service-card {
     background: var(--bg-card);
     border-radius: 30px;
@@ -1089,6 +1134,18 @@ textarea.error {
     overflow: hidden;
     text-align: left;
     align-items: flex-start;
+}
+
+@media (max-width: 768px) {
+    .service-card {
+        padding: 2.5rem 2rem;
+        min-height: 300px;
+        border-radius: 24px;
+    }
+
+    .service-card h3 {
+        font-size: 2rem;
+    }
 }
 
 .service-card:hover {
@@ -1238,6 +1295,23 @@ textarea.error {
 }
 
 @media (max-width: 768px) {
+    .sd-hero {
+        padding: 1rem;
+        height: 85vh;
+        /* Adjust height for mobile */
+    }
+
+    .sd-hero h1 {
+        font-size: 2.8rem;
+    }
+
+    .sd-hero p {
+        font-size: 1.1rem;
+        padding: 0 1rem;
+    }
+}
+
+@media (max-width: 768px) {
     .sd-hero h1 {
         font-size: 3rem;
     }
@@ -1257,6 +1331,14 @@ textarea.error {
     background: var(--bg-color);
 }
 
+@media (max-width: 768px) {
+    .sd-section {
+        padding: 4rem 1.5rem;
+        min-height: auto;
+        /* Allow content to dictate height on mobile */
+    }
+}
+
 .sd-section.bg-light {
     background: var(--bg-secondary);
 }
@@ -1268,6 +1350,12 @@ textarea.error {
     grid-template-columns: 1fr;
     gap: 6rem;
     align-items: center;
+}
+
+@media (max-width: 768px) {
+    .sd-container {
+        gap: 3rem;
+    }
 }
 
 @media (min-width: 1024px) {
@@ -1292,11 +1380,23 @@ textarea.error {
     letter-spacing: -0.02em;
 }
 
+@media (max-width: 768px) {
+    .sd-content h2 {
+        font-size: 2.2rem;
+    }
+}
+
 .sd-content p {
     font-size: 1.25rem;
     color: var(--text-muted);
     line-height: 1.6;
     margin-bottom: 2rem;
+}
+
+@media (max-width: 768px) {
+    .sd-content p {
+        font-size: 1.05rem;
+    }
 }
 
 .sd-visual {
@@ -1312,6 +1412,14 @@ textarea.error {
     box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
     border: 1px solid rgba(255, 255, 255, 0.05);
     transition: transform 0.6s var(--ease-out-expo);
+}
+
+@media (max-width: 768px) {
+    .sd-visual {
+        height: 300px;
+        font-size: 2.5rem;
+        border-radius: 20px;
+    }
 }
 
 .sd-visual:hover {
@@ -1342,6 +1450,14 @@ textarea.error {
     margin-top: 4rem;
 }
 
+@media (max-width: 768px) {
+    .sd-features-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        margin-top: 2rem;
+    }
+}
+
 .sd-feature-card {
     background: var(--bg-card);
     padding: 3rem 2rem;
@@ -1355,6 +1471,16 @@ textarea.error {
     text-align: center;
     height: 100%;
     border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+@media (max-width: 768px) {
+    .sd-feature-card {
+        padding: 2rem 1.5rem;
+    }
+
+    .sd-feature-card h3 {
+        font-size: 1.5rem;
+    }
 }
 
 .sd-feature-card:hover {
