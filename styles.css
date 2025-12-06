@@ -168,8 +168,8 @@ body {
 
 @media (max-width: 768px) {
     .hero h1 {
-        font-size: 3rem;
-        /* Smaller font for mobile */
+        font-size: 3.8rem;
+        /* Increased from 3rem */
         line-height: 1.1;
     }
 }
@@ -186,7 +186,8 @@ body {
 
 @media (max-width: 768px) {
     .hero .subtitle {
-        font-size: 1.2rem;
+        font-size: 1.5rem;
+        /* Increased from 1.2rem */
     }
 }
 
@@ -196,6 +197,13 @@ body {
     opacity: 0;
     transform: translateY(30px);
     animation: fadeInUp 1.2s var(--ease-out-expo) 0.4s forwards;
+}
+
+@media (max-width: 768px) {
+    .hero-tagline {
+        font-size: 1.3rem;
+        /* Added mobile size */
+    }
 }
 
 @keyframes fadeInUp {
