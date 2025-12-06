@@ -301,18 +301,25 @@ select:focus {
 .btn-primary {
     width: 100%;
     padding: 0.75rem;
-    background: var(--color-secondary);
+    background: var(--accent-color);
+    /* Use Apple Blue */
     border: none;
-    border-radius: 6px;
-    color: white;
+    border-radius: 20px;
+    /* More rounded for Apple style */
+    color: #ffffff;
+    /* Explicit white text */
     font-weight: 600;
     font-size: 1rem;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .btn-primary:hover {
-    background: #1d4ed8;
+    background: #0077ed;
+    /* Slightly lighter blue on hover */
+    transform: scale(1.02);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
 }
 
 .btn-secondary {

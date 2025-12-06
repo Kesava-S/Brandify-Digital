@@ -311,7 +311,6 @@ window.addEventListener('load', renderServices);
 
 // --- Service Detail View Logic ---
 function openServiceDetail(service) {
-    const detailView = document.getElementById('view-service-detail');
     const contentContainer = document.getElementById('service-detail-content');
 
     // Populate Content
@@ -370,14 +369,14 @@ function openServiceDetail(service) {
             <div class="sd-content scroll-reveal" style="text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%;">
                 <h2>Ready to get started?</h2>
                 <p style="margin-bottom: 2rem;">Take your business to the next level with ${service.title}.</p>
-                <button class="btn-primary cta-btn" style="font-size: 1rem; padding: 0.8rem 2rem;" onclick="document.getElementById('back-to-home').click(); setTimeout(() => document.querySelector('.inquiry-section').scrollIntoView({behavior: 'smooth'}), 500);">
+                <button class="btn-primary cta-btn" style="font-size: 1rem; padding: 0.8rem 2rem;" onclick="switchView('landing'); setTimeout(() => document.querySelector('.inquiry-section').scrollIntoView({behavior: 'smooth'}), 500);">
                     ${service.cta}
                 </button>
             </div>
         </div>
     `;
 
-    // Switch View
+    // Switch View (this will push state)
     switchView('serviceDetail');
 
     // Initialize Scroll Animations
@@ -495,7 +494,7 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
-function switchView(viewName) {
+function switchView(viewName, addToHistory = true) {
     // 1. Hide all views
     Object.values(views).forEach(el => {
         if (el) {
@@ -516,6 +515,13 @@ function switchView(viewName) {
         // Save state
         localStorage.setItem('lastView', viewName);
 
+        // History API Integration
+        if (addToHistory) {
+            const state = { view: viewName };
+            const url = viewName === 'landing' ? '/' : `#${viewName}`;
+            history.pushState(state, '', url);
+        }
+
         // Scroll to top
         window.scrollTo(0, 0);
 
@@ -531,11 +537,46 @@ function switchView(viewName) {
         } else if (viewName === 'login') {
             navBtns.login.classList.add('active');
         }
-        // Dashboards don't necessarily need a highlighted nav button, or we could highlight 'Home' or a 'Dashboard' button if it existed.
     } else {
         console.error(`View '${viewName}' not found.`);
     }
 }
+
+// Handle Browser Back Button
+window.addEventListener('popstate', (event) => {
+    if (event.state && event.state.view) {
+        if (event.state.view === 'service-detail') {
+            // If we are navigating TO service detail via back/forward, we need to re-open it?
+            // Actually, openServiceDetail sets the innerHTML. If we just switchView to 'service-detail', it might be empty if not re-populated.
+            // Ideally, we should store the service ID in state and re-fetch/render.
+            // BUT, for now, if we are going BACK from service detail, we want to go to landing.
+            // If we are going FORWARD to service detail, we might have an issue.
+            // Let's assume the user is going BACK to landing.
+            switchView(event.state.view, false);
+        } else {
+            switchView(event.state.view, false);
+        }
+    } else {
+        // If no state (e.g., initial load or back to root), go to landing or home
+        // Check hash to be sure
+        const hash = window.location.hash.replace('#', '');
+        if (hash === 'service-detail') {
+            // If hash is service-detail but no state, we can't render it easily without service data.
+            // Fallback to landing.
+            switchView('landing', false);
+        } else if (hash && views[hash]) {
+            switchView(hash, false);
+        } else {
+            // If logged in, go to dashboard, else landing
+            if (currentUser) {
+                const dashboardView = currentUser.role === 'employee' ? 'employee' : currentUser.role === 'manager' ? 'manager' : currentUser.role === 'client' ? 'client' : 'owner';
+                switchView(dashboardView, false);
+            } else {
+                switchView('landing', false);
+            }
+        }
+    }
+});
 
 function goHome() {
     if (currentUser) {
