@@ -288,7 +288,7 @@ function renderServices() {
                 card.className = 'service-card';
                 card.innerHTML = `
                     <div>
-                        <span style="font-size: 0.8rem; color: var(--text-light); text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">${categoryGroup.category.replace(/^\d+\.\s*/, '')}</span>
+
                         <h3 style="margin-top: 0.5rem;">${service.title}</h3>
                         <p style="color: var(--text-light); font-size: 0.95rem;">${service.tagline}</p>
                     </div>
