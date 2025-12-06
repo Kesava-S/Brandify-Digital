@@ -1,20 +1,28 @@
 :root {
-    /* Premium Dark Cinematic Palette */
-    --bg-color: #000000;
-    --bg-secondary: #0a0a0a;
-    --bg-card: #151516;
+    /* Premium Apple-Style Light Theme */
+    --bg-color: #ffffff;
+    --bg-secondary: #f5f5f7;
+    /* Apple's off-white */
+    --bg-card: #ffffff;
 
-    --text-main: #f5f5f7;
+    --text-main: #1d1d1f;
+    /* Apple's near-black */
     --text-muted: #86868b;
-    --text-glow: rgba(255, 255, 255, 0.8);
+    --text-glow: rgba(0, 0, 0, 0.1);
 
-    --accent-color: #2997ff;
+    --accent-color: #0071e3;
     /* Apple Blue */
-    --accent-glow: rgba(41, 151, 255, 0.4);
+    --accent-glow: rgba(0, 113, 227, 0.3);
 
-    --font-main: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+    --gradient-primary: linear-gradient(135deg, #1d1d1f 0%, #434344 100%);
+    --gradient-blue: linear-gradient(135deg, #0071e3 0%, #42a1ff 100%);
+    --gradient-dark: linear-gradient(135deg, #000000 0%, #434343 100%);
+
+    --font-main: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, sans-serif;
 
     --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.05);
+    --shadow-hover: 0 20px 40px rgba(0, 0, 0, 0.1);
 }
 
 * {
@@ -32,7 +40,7 @@ body {
     overflow-x: hidden;
 }
 
-/* Cinematic Navbar */
+/* Apple-Style Navbar */
 .navbar {
     position: fixed;
     top: 0;
@@ -41,10 +49,11 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(255, 255, 255, 0.8);
     backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     z-index: 1000;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
     transition: all 0.4s ease;
 }
 
@@ -109,7 +118,7 @@ body {
 .nav-btn:hover,
 .nav-btn.active {
     color: var(--text-main);
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    /* Removed text-shadow for cleaner look */
 }
 
 /* Immersive Hero Section */
@@ -122,9 +131,9 @@ body {
     text-align: center;
     position: relative;
     overflow: hidden;
-    background: radial-gradient(circle at center, #1a1a1a 0%, #000000 70%);
+    background: var(--bg-color);
+    /* Clean white background */
     padding: 0 1.5rem;
-    /* Add padding for mobile */
 }
 
 .hero::before {
@@ -134,7 +143,8 @@ body {
     left: 50%;
     width: 120%;
     height: 120%;
-    background: radial-gradient(circle, rgba(41, 151, 255, 0.15) 0%, transparent 60%);
+    background: radial-gradient(circle, rgba(0, 113, 227, 0.05) 0%, transparent 60%);
+    /* Subtle blue glow */
     transform: translate(-50%, -50%);
     pointer-events: none;
     animation: pulseGlow 8s infinite alternate;
@@ -144,8 +154,11 @@ body {
     font-size: 5rem;
     font-weight: 700;
     letter-spacing: -0.03em;
-    background: linear-gradient(180deg, #ffffff 0%, #86868b 100%);
+    background: var(--gradient-primary);
+    /* Dark gradient text */
     -webkit-background-clip: text;
+    background-clip: text;
+    /* Added standard property */
     -webkit-text-fill-color: transparent;
     margin-bottom: 1.5rem;
     opacity: 0;
@@ -1124,14 +1137,15 @@ textarea.error {
 }
 
 .service-card {
-    background: var(--bg-card);
+    background: #ffffff;
     border-radius: 24px;
-    /* Slightly smaller radius */
     padding: 2.5rem 2rem;
-    /* Reduced padding */
     cursor: pointer;
     transition: all 0.5s var(--ease-out-expo);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    /* Subtle light border */
+    box-shadow: var(--shadow-card);
+    /* Soft shadow */
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
@@ -1157,8 +1171,8 @@ textarea.error {
 
 .service-card:hover {
     transform: scale(1.02);
-    border-color: rgba(255, 255, 255, 0.2);
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    border-color: rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-hover);
 }
 
 .service-card h3 {
@@ -1374,7 +1388,10 @@ textarea.error {
     font-size: 3.5rem;
     font-weight: 700;
     margin-bottom: 1.5rem;
-    color: var(--text-main);
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
     letter-spacing: -0.02em;
 }
 
@@ -1398,7 +1415,7 @@ textarea.error {
 }
 
 .sd-visual {
-    background: var(--bg-card);
+    background: #ffffff;
     border-radius: 30px;
     height: 500px;
     width: 100%;
@@ -1407,8 +1424,8 @@ textarea.error {
     justify-content: center;
     font-size: 4rem;
     color: var(--text-muted);
-    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: var(--shadow-card);
+    border: 1px solid rgba(0, 0, 0, 0.05);
     transition: transform 0.6s var(--ease-out-expo);
 }
 
@@ -1422,7 +1439,7 @@ textarea.error {
 
 .sd-visual:hover {
     transform: scale(1.03);
-    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: var(--shadow-hover);
 }
 
 /* Scroll Animations */
@@ -1457,18 +1474,18 @@ textarea.error {
 }
 
 .sd-feature-card {
-    background: var(--bg-card);
+    background: #ffffff;
     padding: 3rem 2rem;
     border-radius: 24px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    transition: all 0.4s var(--ease-out-expo);
+    box-shadow: var(--shadow-card);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
     height: 100%;
-    border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 @media (max-width: 768px) {
