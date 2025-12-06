@@ -341,6 +341,25 @@ const servicesData = [
                 cta: "Automate My Workflows"
             }
         ]
+    },
+    {
+        category: "7. Customer & Marketing Automation",
+        services: [
+            {
+                title: "Growth & Engagement Automation",
+                tagline: "Attract, engage, and retain customers automatically.",
+                features: [
+                    { icon: "🎣", title: "Lead Flow", desc: "Lead capture → CRM → automated follow-up." },
+                    { icon: "📧", title: "Campaigns", desc: "Sending newsletters or drip campaigns." },
+                    { icon: "📱", title: "Social Media", desc: "Social media posting & scheduling." },
+                    { icon: "💬", title: "Notifications", desc: "SMS/WhatsApp notifications for offers or events." },
+                    { icon: "⭐", title: "Feedback", desc: "Customer feedback collection & surveys." },
+                    { icon: "🏷️", title: "Segmentation", desc: "Tagging & segmenting customers automatically." }
+                ],
+                whyMatters: "Build stronger customer relationships and drive sales on autopilot.",
+                cta: "Boost Customer Engagement"
+            }
+        ]
     }
 ];
 
