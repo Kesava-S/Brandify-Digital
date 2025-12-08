@@ -191,7 +191,7 @@ body {
 
 .hero-tagline {
     font-size: 1.2rem;
-    color: var(--text-muted);
+    color: var(--accent-color);
     opacity: 0;
     transform: translateY(30px);
     animation: fadeInUp 1.2s var(--ease-out-expo) 0.4s forwards;

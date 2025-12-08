@@ -42,15 +42,15 @@ function initDynamicTagline() {
             if (charIndex > currentPhrase.length) {
                 isDeleting = true;
                 charIndex = currentPhrase.length;
-                typeSpeed = 3500; // Pause at end before deleting
+                typeSpeed = 1500; // Pause at end before deleting
             }
         }
 
         setTimeout(type, typeSpeed);
     }
 
-    // Start the typing loop after initial delay of 3.5s
-    setTimeout(type, 3500);
+    // Start the typing loop after initial delay of 1.5s
+    setTimeout(type, 1500);
 }
 
 // Initialize dynamic tagline on load
