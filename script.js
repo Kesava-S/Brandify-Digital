@@ -187,6 +187,21 @@ const servicesData = [
                     "Post content consistently and on schedule",
                     "Fully customizable workflows tailored to your business"
                 ],
+                whyChooseUs: [
+                    { title: "GDPR-Compliant", desc: "Built-in data protection, consent logs, and secure workflows." },
+                    { title: "UK-Ready Systems", desc: "Optimised posting times, UK spelling/tone, analytics built for UK markets." },
+                    { title: "Enterprise-Level Reliability", desc: "Automations are monitored 24/7 with error alerts." },
+                    { title: "Clear Documentation", desc: "SOPs, onboarding guides, and training videos are provided." },
+                    { title: "Full Transparency", desc: "Live dashboards for leads, ads, content & performance." }
+                ],
+                whatYouGet: [
+                    "Complete automation setup",
+                    "Workflow architecture + documentation",
+                    "Integration with your tools",
+                    "Testing + quality assurance",
+                    "Training for your team",
+                    "Ongoing optimisation support"
+                ],
                 cta: "Book a Demo"
             }
         ]
@@ -334,6 +349,37 @@ function openServiceDetail(service) {
                 </div>
             </div>
         </div>
+
+        ${service.whyChooseUs ? `
+        <div class="sd-section">
+            <div class="sd-container">
+                <div class="sd-content scroll-reveal" style="text-align: center; margin: 0 auto; width: 100%;">
+                    <h2>Why Businesses Choose Us</h2>
+                    <div class="why-choose-grid">
+                        ${service.whyChooseUs.map(item => `
+                            <div class="why-choose-item">
+                                <h4>✓ ${item.title}</h4>
+                                <p>${item.desc}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        </div>
+        ` : ''}
+
+        ${service.whatYouGet ? `
+        <div class="sd-section bg-light">
+            <div class="sd-container">
+                <div class="sd-content scroll-reveal" style="text-align: center; margin: 0 auto; max-width: 800px;">
+                    <h2>What You Get</h2>
+                    <ul class="differentiation-list" style="text-align: left; display: inline-block; margin-top: 1rem;">
+                        ${service.whatYouGet.map(item => `<li>${item}</li>`).join('')}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        ` : ''}
 
         ${service.workflow ? `
         <div class="sd-section">
