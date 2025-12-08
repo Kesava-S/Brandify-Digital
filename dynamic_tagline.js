@@ -16,27 +16,30 @@ function initDynamicTagline() {
     ];
 
     let phraseIndex = 0;
-    let charIndex = phrases[0].length; // Start fully typed
-    let isDeleting = false;
+    let charIndex = phrases[0].length;
+    let isDeleting = true; // Start by deleting after the initial pause
     let typeSpeed = 100;
 
     function type() {
         const currentPhrase = phrases[phraseIndex];
 
         if (isDeleting) {
-            taglineElement.textContent = currentPhrase.substring(0, charIndex - 1);
+            taglineElement.textContent = currentPhrase.substring(0, charIndex);
             charIndex--;
             typeSpeed = 30; // Faster deleting
         } else {
-            taglineElement.textContent = currentPhrase.substring(0, charIndex + 1);
+            taglineElement.textContent = currentPhrase.substring(0, charIndex);
             charIndex++;
             typeSpeed = 80; // Normal typing
         }
 
+        // Check if finished typing
         if (!isDeleting && charIndex === currentPhrase.length) {
             isDeleting = true;
             typeSpeed = 3500; // Pause at end before deleting
-        } else if (isDeleting && charIndex === 0) {
+        }
+        // Check if finished deleting
+        else if (isDeleting && charIndex === 0) {
             isDeleting = false;
             phraseIndex = (phraseIndex + 1) % phrases.length;
             typeSpeed = 500; // Pause before typing next
@@ -45,7 +48,7 @@ function initDynamicTagline() {
         setTimeout(type, typeSpeed);
     }
 
-    // Start the typing loop after initial delay
+    // Start the typing loop after initial delay of 3.5s
     setTimeout(type, 3500);
 }
 
