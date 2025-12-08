@@ -27,22 +27,23 @@ function initDynamicTagline() {
             taglineElement.textContent = currentPhrase.substring(0, charIndex);
             charIndex--;
             typeSpeed = 30; // Faster deleting
+
+            if (charIndex < 0) {
+                isDeleting = false;
+                phraseIndex = (phraseIndex + 1) % phrases.length;
+                charIndex = 0;
+                typeSpeed = 500; // Pause before typing next
+            }
         } else {
             taglineElement.textContent = currentPhrase.substring(0, charIndex);
             charIndex++;
             typeSpeed = 80; // Normal typing
-        }
 
-        // Check if finished typing
-        if (!isDeleting && charIndex === currentPhrase.length) {
-            isDeleting = true;
-            typeSpeed = 3500; // Pause at end before deleting
-        }
-        // Check if finished deleting
-        else if (isDeleting && charIndex === 0) {
-            isDeleting = false;
-            phraseIndex = (phraseIndex + 1) % phrases.length;
-            typeSpeed = 500; // Pause before typing next
+            if (charIndex > currentPhrase.length) {
+                isDeleting = true;
+                charIndex = currentPhrase.length;
+                typeSpeed = 3500; // Pause at end before deleting
+            }
         }
 
         setTimeout(type, typeSpeed);
