@@ -35,7 +35,7 @@ function initDynamicTagline() {
 
         if (!isDeleting && charIndex === currentPhrase.length) {
             isDeleting = true;
-            typeSpeed = 3000; // Pause at end before deleting
+            typeSpeed = 3500; // Pause at end before deleting
         } else if (isDeleting && charIndex === 0) {
             isDeleting = false;
             phraseIndex = (phraseIndex + 1) % phrases.length;
@@ -46,7 +46,7 @@ function initDynamicTagline() {
     }
 
     // Start the typing loop after initial delay
-    setTimeout(type, 3000);
+    setTimeout(type, 3500);
 }
 
 // Initialize dynamic tagline on load
