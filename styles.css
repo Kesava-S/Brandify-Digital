@@ -174,7 +174,10 @@ body {
         /* Force exact viewport height */
         min-height: unset;
         /* Reset min-height */
+        width: 100vw;
+        /* Ensure background fills full width */
         padding: 0 1rem;
+        margin: 0;
     }
 
     .hero h1 {
