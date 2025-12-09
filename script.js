@@ -696,6 +696,18 @@ if (footerCookieLink) {
     });
 }
 
+const footerLegalLink = document.getElementById('footer-legal-link');
+if (footerLegalLink) {
+    footerLegalLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        switchView('privacyPolicy');
+        setTimeout(() => {
+            const el = document.getElementById('legal-disclaimer');
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+    });
+}
+
 if (navBtns.logout) navBtns.logout.addEventListener('click', async () => {
     try {
         // Unsubscribe all active listeners before logging out
