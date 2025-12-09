@@ -450,6 +450,20 @@ select:focus {
     padding-bottom: 4rem;
 }
 
+@media (max-width: 768px) {
+    .services-section {
+        width: 100vw;
+        position: relative;
+        left: 50%;
+        right: 50%;
+        margin-left: -50vw;
+        margin-right: -50vw;
+        padding-left: 1rem;
+        padding-right: 1rem;
+        box-sizing: border-box;
+    }
+}
+
 .services-section::before {
     content: '';
     position: absolute;
@@ -1191,14 +1205,12 @@ textarea.error {
 }
 
 .service-card {
-    background: rgba(28, 28, 30, 0.6);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: #ffffff;
     border-radius: 24px;
     padding: 2.5rem 2rem;
     cursor: pointer;
     transition: all 0.5s var(--ease-out-expo);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.05);
     /* Subtle light border */
     box-shadow: var(--shadow-card);
     /* Soft shadow */
@@ -1235,7 +1247,8 @@ textarea.error {
     font-size: 2rem;
     /* Reduced from 2.5rem */
     font-weight: 700;
-    color: #f5f5f7;
+    font-weight: 700;
+    color: var(--text-main);
     margin-top: 1rem;
     margin-bottom: 1rem;
     line-height: 1.1;
@@ -1245,7 +1258,7 @@ textarea.error {
 
 .service-card p {
     font-size: 1.1rem;
-    color: #86868b;
+    color: var(--text-muted);
     line-height: 1.6;
     max-width: 90%;
     margin-bottom: 2rem;
